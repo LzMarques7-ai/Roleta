@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0b10">
+<title>ROULETTE // Character Forge</title>
+<style>
+:root{--bg:#08080c;--card:#111119;--card2:#171722;--line:#292936;--text:#f5f5f7;--muted:#9b9baa;--accent:#b78cff;--accent2:#65e6ff;--good:#75e39b;--bad:#ff7777}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -10%,#24203b 0,#0b0b10 38%,#08080c 75%);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
+.app{max-width:720px;margin:auto;padding:18px 14px 50px}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.brand{font-weight:900;letter-spacing:.14em;font-size:14px}.badge{font-size:11px;color:var(--accent2);border:1px solid #31515b;border-radius:99px;padding:6px 9px}
+.hero{text-align:center;padding:20px 8px 16px}.hero h1{font-size:35px;line-height:1;margin:0 0 10px;letter-spacing:-.04em}.hero p{color:var(--muted);margin:0;font-size:14px}
+.card{background:linear-gradient(145deg,#14141d,#0f0f16);border:1px solid var(--line);border-radius:22px;padding:16px;margin:12px 0;box-shadow:0 15px 45px #0005}.section-title{font-size:12px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin:2px 0 13px}
+.roll-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.roll{background:var(--card2);border:1px solid var(--line);border-radius:15px;padding:11px}.roll small{display:block;color:var(--muted);font-size:11px}.roll strong{display:block;margin-top:5px;font-size:15px}
+.spin{width:100%;border:0;border-radius:18px;padding:17px;background:linear-gradient(90deg,var(--accent),#7c9cff);color:#09090d;font-weight:900;font-size:17px;letter-spacing:.05em;box-shadow:0 10px 35px #9b7cff35}.spin:active{transform:scale(.98)}
+.subbuttons{display:flex;gap:9px;margin-top:9px}.subbuttons button{flex:1;padding:11px;border-radius:13px;border:1px solid var(--line);background:#14141c;color:var(--text)}
+#result{display:none}.name{font-size:30px;font-weight:900;letter-spacing:-.04em}.subtitle{color:var(--accent2);font-size:13px;margin-top:2px}.rarity{font-size:13px;margin:8px 0 16px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:9px}.stat{background:#0c0c12;border:1px solid #22222d;border-radius:13px;padding:10px}.stat-head{display:flex;justify-content:space-between;font-size:12px}.bar{height:6px;background:#252530;border-radius:9px;margin-top:8px;overflow:hidden}.fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:9px}
+.tags{display:flex;flex-wrap:wrap;gap:7px}.tag{font-size:11px;background:#1b1b27;border:1px solid #303040;padding:7px 9px;border-radius:99px}.story{color:#d9d9e2;line-height:1.55;font-size:14px}
+.history-item{padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer}.history-item:last-child{border:0}.history-item b{font-size:13px}.history-item span{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+.flash{animation:flash .5s ease}@keyframes flash{50%{transform:scale(1.015);filter:brightness(1.35)}}
+.hidden{display:none}.footer{text-align:center;color:#626271;font-size:10px;margin-top:24px}
+@media(max-width:420px){.hero h1{font-size:30px}.roll-grid,.stats{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top"><div class="brand">ROULETTE // FORGE</div><div class="badge">v0.1 MOBILE</div></div>
+  <div class="hero"><h1>Crie um personagem.</h1><p>Cada rolagem altera atributos, potencial e consequências.</p></div>
+
+  <div class="card">
+    <div class="section-title">Sistema de rolagem</div>
+    <div class="roll-grid" id="liveRolls">
+      <div class="roll"><small>Espécie</small><strong>—</strong></div>
+      <div class="roll"><small>Origem</small><strong>—</strong></div>
+      <div class="roll"><small>Personalidade</small><strong>—</strong></div>
+      <div class="roll"><small>Talento</small><strong>—</strong></div>
+      <div class="roll"><small>Poder</small><strong>—</strong></div>
+      <div class="roll"><small>Destino</small><strong>—</strong></div>
+    </div>
+  </div>
+
+  <button class="spin" onclick="generate()">🎰 GIRAR TUDO</button>
+  <div class="subbuttons"><button onclick="clearAll()">Novo</button><button onclick="saveCurrent()">Salvar</button><button onclick="share()">Compartilhar</button></div>
+
+  <div id="result">
+    <div class="card">
+      <div class="section-title">Personagem gerado</div>
+      <div class="name" id="charName"></div><div class="subtitle" id="charTitle"></div><div class="rarity" id="rarity"></div>
+      <div class="tags" id="tags"></div>
+    </div>
+
+    <div class="card"><div class="section-title">Atributos finais</div><div class="stats" id="stats"></div></div>
+    <div class="card"><div class="section-title">Identidade & origem</div><div class="story" id="identity"></div></div>
+    <div class="card"><div class="section-title">Psicologia</div><div class="story" id="psy"></div></div>
+    <div class="card"><div class="section-title">Poder / talento</div><div class="story" id="power"></div></div>
+    <div class="card"><div class="section-title">História gerada</div><div class="story" id="story"></div></div>
+  </div>
+
+  <div class="card" id="historyCard">
+    <div class="section-title">Personagens salvos</div>
+    <div id="history"><div style="color:var(--muted);font-size:13px">Nenhum personagem salvo ainda.</div></div>
+  </div>
+  <div class="footer">Prototype — dados salvos apenas neste aparelho.</div>
+</div>
+
+<script>
+const R = arr => arr[Math.floor(Math.random()*arr.length)];
+const clamp=(n,a=1,b=100)=>Math.max(a,Math.min(b,Math.round(n)));
+const baseStats={forca:50,velocidade:50,resistencia:50,inteligencia:50,sabedoria:50,carisma:50,disciplina:50,criatividade:50,sorte:50,combate:50,potencial:50,saude:50};
+const data={
+species:[
+ {n:"Humano",m:{},tag:"Versátil"},
+ {n:"Elfo",m:{inteligencia:10,velocidade:8,criatividade:8,resistencia:-4},tag:"Arcano"},
+ {n:"Orc",m:{forca:22,resistencia:18,velocidade:-8,inteligencia:-7},tag:"Brutal"},
+ {n:"Anão",m:{forca:14,resistencia:20,velocidade:-12,disciplina:10},tag:"Inabalável"},
+ {n:"Vampiro",m:{velocidade:16,carisma:10,saude:10,sorte:-4,potencial:20},tag:"Sobrenatural"},
+ {n:"Demônio",m:{forca:18,carisma:8,resistencia:12,sabedoria:-6,potencial:25},tag:"Abissal"},
+ {n:"Draconiano",m:{forca:20,resistencia:20,inteligencia:6,potencial:22},tag:"Dracônico"},
+ {n:"Fada",m:{velocidade:18,criatividade:20,forca:-18,resistencia:-10,potencial:15},tag:"Feérico"}
+],
+origins:[
+ {n:"Família pobre",m:{disciplina:6,resistencia:5,sorte:-8},social:-15},
+ {n:"Classe média",m:{inteligencia:4,disciplina:4,saude:3},social:0},
+ {n:"Família rica",m:{carisma:8,inteligencia:8,sorte:7,disciplina:-2},social:18},
+ {n:"Nobreza",m:{carisma:15,sabedoria:8,disciplina:7,combate:4,sorte:8},social:30},
+ {n:"Orfanato",m:{resistencia:10,sabedoria:5,disciplina:5,sorte:-10},social:-10},
+ {n:"Clã guerreiro",m:{forca:10,combate:18,disciplina:10,carisma:-3},social:8},
+ {n:"Academia de elite",m:{inteligencia:16,sabedoria:12,disciplina:10,combate:2},social:12}
+],
+personalities:[
+ {n:"Arrogante",m:{carisma:7,disciplina:-8,sabedoria:-5,combate:5},tags:["Ego alto","Confrontador"]},
+ {n:"Disciplinado",m:{disciplina:20,combate:8,saude:5,sorte:-2},tags:["Focado","Constante"]},
+ {n:"Genial",m:{inteligencia:22,criatividade:15,disciplina:-4},tags:["Gênio","Curioso"]},
+ {n:"Empático",m:{carisma:10,sabedoria:12,criatividade:6,combate:-4},tags:["Empático","Diplomático"]},
+ {n:"Impulsivo",m:{velocidade:8,combate:10,disciplina:-15,sabedoria:-8},tags:["Impulsivo","Corajoso"]},
+ {n:"Reservado",m:{sabedoria:10,criatividade:10,carisma:-8,disciplina:6},tags:["Observador","Introspectivo"]},
+ {n:"Ambicioso",m:{carisma:8,disciplina:10,potencial:8,sabedoria:-3},tags:["Ambicioso","Competitivo"]},
+ {n:"Preguiçoso",m:{criatividade:7,sorte:5,disciplina:-22,saude:-4},tags:["Preguiçoso","Improvisador"]}
+],
+talents:[
+ {n:"Força excepcional",m:{forca:25,resistencia:10,combate:8}},
+ {n:"Mente analítica",m:{inteligencia:20,sabedoria:12,criatividade:8}},
+ {n:"Reflexos absurdos",m:{velocidade:24,combate:12}},
+ {n:"Líder nato",m:{carisma:22,sabedoria:8,disciplina:8}},
+ {n:"Artista prodígio",m:{criatividade:25,carisma:8}},
+ {n:"Sobrevivente",m:{resistencia:18,sabedoria:12,sorte:5,saude:8}},
+ {n:"Nenhum talento evidente",m:{sorte:3}}
+],
+powers:[
+ {n:"Nenhum poder",m:{potencial:-8},power:0},
+ {n:"Pirocinese",m:{potencial:15,inteligencia:5,combate:10},power:72},
+ {n:"Telepatia",m:{potencial:22,inteligencia:12,sabedoria:8},power:84},
+ {n:"Regeneração",m:{potencial:18,saude:25,resistencia:8},power:80},
+ {n:"Manipulação temporal",m:{potencial:38,inteligencia:12,sabedoria:8,disciplina:-5},power:98},
+ {n:"Manipulação da gravidade",m:{potencial:30,forca:8,inteligencia:10},power:93},
+ {n:"Controle de sombras",m:{potencial:24,velocidade:8,criatividade:10,carisma:4},power:87},
+ {n:"Transmutação",m:{potencial:28,inteligencia:16,criatividade:12},power:92}
+],
+destiny:[
+ {n:"Vida comum",m:{sorte:4},risk:15},
+ {n:"Herói improvável",m:{coragem:0,carisma:5,potencial:10,sorte:8},risk:55},
+ {n:"Vilão em ascensão",m:{potencial:18,carisma:8,sabedoria:-5,sorte:2},risk:78},
+ {n:"Lenda mundial",m:{potencial:25,carisma:12,sorte:12},risk:92},
+ {n:"Tragédia anunciada",m:{sorte:-22,saude:-8,potencial:8},risk:95}
+],
+names:["Kael","Auren","Nox","Eryon","Lys","Darian","Riven","Aster","Mika","Zeph","Orion","Varek","Elian","Nyra","Soren"],
+titles:["o Inesperado","o Último Herdeiro","o Sem-Nome","o Quebrador de Destinos","o Escolhido","o Sobrevivente","o Prodígio","o Condenado"]
+};
+let current=null;
+
+function mod(obj, stats){for(const [k,v] of Object.entries(obj||{})){if(k in stats)stats[k]+=v}}
+function generate(){
+ const rolls={species:R(data.species),origin:R(data.origins),personality:R(data.personalities),talent:R(data.talents),power:R(data.powers),destiny:R(data.destiny)};
+ const s={...baseStats}; Object.values(rolls).forEach(x=>mod(x.m,s));
+ // hidden interaction rules: results influence each other
+ if(rolls.species.n==="Vampiro" && rolls.origin.n==="Nobreza"){s.carisma+=8;s.sorte+=5}
+ if(rolls.personality.n==="Genial" && rolls.talent.n==="Mente analítica"){s.inteligencia+=10;s.potencial+=6}
+ if(rolls.personality.n==="Disciplinado" && rolls.power.power>=90){s.potencial+=8;s.disciplina+=7}
+ if(rolls.personality.n==="Preguiçoso" && rolls.power.n!=="Nenhum poder"){s.disciplina-=8;s.potencial-=5}
+ if(rolls.destiny.n==="Tragédia anunciada"){s.resistencia+=8;s.sabedoria+=5}
+ if(rolls.destiny.n==="Lenda mundial"){s.carisma+=8;s.potencial+=8}
+ for(const k in s)s[k]=clamp(s[k]);
+ const avg=Object.values(s).reduce((a,b)=>a+b,0)/Object.keys(s).length;
+ const rarity=clamp(avg/1.15 + (rolls.power.power||0)*.12 + (rolls.species.n==="Humano"?0:7),1,100);
+ const rank=rarity>=90?"★★★★★ LENDÁRIO":rarity>=78?"★★★★☆ ÉPICO":rarity>=62?"★★★☆☆ RARO":rarity>=45?"★★☆☆☆ INCOMUM":"★☆☆☆☆ COMUM";
+ const name=R(names)+" "+R(titles);
+ current={rolls,s,avg,rarity,rank,name};
+ render();
+ document.getElementById("result").style.display="block";
+ document.getElementById("result").classList.remove("flash"); void document.getElementById("result").offsetWidth; document.getElementById("result").classList.add("flash");
+}
+function render(){
+ const r=current.rolls,s=current.s;
+ const live=[["Espécie",r.species.n],["Origem",r.origin.n],["Personalidade",r.personality.n],["Talento",r.talent.n],["Poder",r.power.n],["Destino",r.destiny.n]];
+ document.getElementById("liveRolls").innerHTML=live.map(x=>`<div class="roll"><small>${x[0]}</small><strong>${x[1]}</strong></div>`).join("");
+ document.getElementById("charName").textContent=current.name;
+ document.getElementById("charTitle").textContent=`${r.species.tag||"Indivíduo"} • ${r.power.n}`;
+ document.getElementById("rarity").textContent=`${current.rank}  •  Índice geral ${Math.round(current.avg)}/100`;
+ document.getElementById("tags").innerHTML=[r.species.tag,r.personality.n,r.talent.n,r.destiny.n].map(t=>`<span class="tag">${t}</span>`).join("");
+ const labels={forca:"Força",velocidade:"Velocidade",resistencia:"Resistência",inteligencia:"Inteligência",sabedoria:"Sabedoria",carisma:"Carisma",disciplina:"Disciplina",criatividade:"Criatividade",sorte:"Sorte",combate:"Combate",potencial:"Potencial",saude:"Saúde"};
+ document.getElementById("stats").innerHTML=Object.entries(s).map(([k,v])=>`<div class="stat"><div class="stat-head"><span>${labels[k]}</span><b>${v}</b></div><div class="bar"><div class="fill" style="width:${v}%"></div></div></div>`).join("");
+ document.getElementById("identity").innerHTML=`<b>Espécie:</b> ${r.species.n}<br><b>Origem:</b> ${r.origin.n}<br><b>Talento:</b> ${r.talent.n}<br><b>Status social:</b> ${r.origin.social>20?"Muito alto":r.origin.social>5?"Acima da média":r.origin.social<0?"Baixo":"Médio"}`;
+ document.getElementById("psy").innerHTML=`<b>Personalidade:</b> ${r.personality.n}.<br>${r.personality.tags?.join(" • ")||""}<br><br>As características foram incorporadas aos atributos; por isso a mesma personalidade produz resultados diferentes dependendo de espécie, origem e talento.`;
+ document.getElementById("power").innerHTML=`<b>${r.power.n}</b><br>Potência estimada: ${r.power.power||"—"}/100.<br><br>O poder modifica diretamente potencial e outros atributos. Poderes raros também elevam a raridade final.`;
+ const tension = r.destiny.n==="Tragédia anunciada" ? "Apesar do potencial, o destino impõe uma trajetória de perdas e pressão." : r.destiny.n==="Lenda mundial" ? "As circunstâncias favorecem uma trajetória extraordinária e de grande impacto." : "Seu destino ainda é relativamente aberto, permitindo que escolhas futuras tenham grande peso.";
+ document.getElementById("story").innerHTML=`${current.name} nasceu como ${r.species.n.toLowerCase()}, em uma ${r.origin.n.toLowerCase()}. Seu ${r.talent.n.toLowerCase()} moldou a forma como aprendeu a sobreviver e crescer. Sua personalidade ${r.personality.n.toLowerCase()} cria vantagens e limitações próprias. ${r.power.n==="Nenhum poder"?"Não possui poderes sobrenaturais conhecidos.":`Despertou ${r.power.n.toLowerCase()}, uma capacidade de potencial ${r.power.power}/100.`} ${tension}`;
+}
+function saveCurrent(){
+ if(!current){generate();return}
+ const arr=JSON.parse(localStorage.getItem("forge_history")||"[]"); arr.unshift(current); localStorage.setItem("forge_history",JSON.stringify(arr.slice(0,20))); loadHistory();
+}
+function loadHistory(){
+ const arr=JSON.parse(localStorage.getItem("forge_history")||"[]"); const h=document.getElementById("history");
+ h.innerHTML=arr.length?arr.map((x,i)=>`<div class="history-item" onclick="loadSaved(${i})"><b>${x.name}</b> <span>${x.rank} • ${x.rolls.species.n} • ${x.rolls.power.n}</span></div>`).join(""):"<div style='color:var(--muted);font-size:13px'>Nenhum personagem salvo ainda.</div>";
+}
+function loadSaved(i){const a=JSON.parse(localStorage.getItem("forge_history")||"[]");current=a[i];render();document.getElementById("result").style.display="block";window.scrollTo({top:0,behavior:"smooth"})}
+function clearAll(){current=null;document.getElementById("result").style.display="none";document.getElementById("liveRolls").innerHTML=["Espécie","Origem","Personalidade","Talento","Poder","Destino"].map(x=>`<div class="roll"><small>${x}</small><strong>—</strong></div>`).join("")}
+async function share(){if(!current)return;const text=`${current.name}\n${current.rank}\n${current.rolls.species.n} • ${current.rolls.power.n}\nForça ${current.s.forca} | INT ${current.s.inteligencia} | POT ${current.s.potencial}`; if(navigator.share)await navigator.share({title:"Meu personagem",text});else alert(text)}
+loadHistory();
+</script>
+</body>
+</html>
