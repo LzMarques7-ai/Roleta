@@ -1,185 +1,603 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0b0b10">
-<title>ROULETTE // Character Forge</title>
+<meta name="theme-color" content="#090a0f">
+<title>Roleta de Personagens</title>
 <style>
-:root{--bg:#08080c;--card:#111119;--card2:#171722;--line:#292936;--text:#f5f5f7;--muted:#9b9baa;--accent:#b78cff;--accent2:#65e6ff;--good:#75e39b;--bad:#ff7777}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -10%,#24203b 0,#0b0b10 38%,#08080c 75%);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
-.app{max-width:720px;margin:auto;padding:18px 14px 50px}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.brand{font-weight:900;letter-spacing:.14em;font-size:14px}.badge{font-size:11px;color:var(--accent2);border:1px solid #31515b;border-radius:99px;padding:6px 9px}
-.hero{text-align:center;padding:20px 8px 16px}.hero h1{font-size:35px;line-height:1;margin:0 0 10px;letter-spacing:-.04em}.hero p{color:var(--muted);margin:0;font-size:14px}
-.card{background:linear-gradient(145deg,#14141d,#0f0f16);border:1px solid var(--line);border-radius:22px;padding:16px;margin:12px 0;box-shadow:0 15px 45px #0005}.section-title{font-size:12px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin:2px 0 13px}
-.roll-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.roll{background:var(--card2);border:1px solid var(--line);border-radius:15px;padding:11px}.roll small{display:block;color:var(--muted);font-size:11px}.roll strong{display:block;margin-top:5px;font-size:15px}
-.spin{width:100%;border:0;border-radius:18px;padding:17px;background:linear-gradient(90deg,var(--accent),#7c9cff);color:#09090d;font-weight:900;font-size:17px;letter-spacing:.05em;box-shadow:0 10px 35px #9b7cff35}.spin:active{transform:scale(.98)}
-.subbuttons{display:flex;gap:9px;margin-top:9px}.subbuttons button{flex:1;padding:11px;border-radius:13px;border:1px solid var(--line);background:#14141c;color:var(--text)}
-#result{display:none}.name{font-size:30px;font-weight:900;letter-spacing:-.04em}.subtitle{color:var(--accent2);font-size:13px;margin-top:2px}.rarity{font-size:13px;margin:8px 0 16px}
-.stats{display:grid;grid-template-columns:1fr 1fr;gap:9px}.stat{background:#0c0c12;border:1px solid #22222d;border-radius:13px;padding:10px}.stat-head{display:flex;justify-content:space-between;font-size:12px}.bar{height:6px;background:#252530;border-radius:9px;margin-top:8px;overflow:hidden}.fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:9px}
-.tags{display:flex;flex-wrap:wrap;gap:7px}.tag{font-size:11px;background:#1b1b27;border:1px solid #303040;padding:7px 9px;border-radius:99px}.story{color:#d9d9e2;line-height:1.55;font-size:14px}
-.history-item{padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer}.history-item:last-child{border:0}.history-item b{font-size:13px}.history-item span{display:block;color:var(--muted);font-size:11px;margin-top:3px}
-.flash{animation:flash .5s ease}@keyframes flash{50%{transform:scale(1.015);filter:brightness(1.35)}}
-.hidden{display:none}.footer{text-align:center;color:#626271;font-size:10px;margin-top:24px}
-@media(max-width:420px){.hero h1{font-size:30px}.roll-grid,.stats{grid-template-columns:1fr}}
+*{box-sizing:border-box}
+:root{
+  --bg:#090a0f;--card:#11131b;--card2:#171a24;--line:#292d3a;
+  --text:#f5f7fb;--muted:#969cac;--a:#9b7cff;--b:#5de1ff;
+  --good:#67df91;--bad:#ff6f7d;--gold:#ffd76a
+}
+body{margin:0;background:radial-gradient(circle at 50% -10%,#28213f 0,#0d0e15 38%,#090a0f 72%);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+button{font:inherit}
+.app{width:min(760px,100%);margin:auto;padding:16px 13px 60px}
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.logo{font-weight:900;letter-spacing:.13em;font-size:13px}.version{font-size:10px;color:var(--b);border:1px solid #31515c;border-radius:99px;padding:6px 8px}
+.hero{text-align:center;padding:18px 8px 20px}.hero h1{font-size:36px;line-height:1;margin:0 0 9px;letter-spacing:-.045em}.hero p{margin:0;color:var(--muted);font-size:14px}
+.card{background:linear-gradient(145deg,#141720,#0f1118);border:1px solid var(--line);border-radius:21px;padding:16px;margin:11px 0;box-shadow:0 15px 45px #0006}
+.kicker{font-size:10px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;margin-bottom:12px}
+.rolls{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.roll{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:10px;min-height:65px}
+.roll small{display:block;color:var(--muted);font-size:10px}.roll strong{display:block;margin-top:6px;font-size:14px}
+.mainbtn{width:100%;border:0;border-radius:17px;padding:17px;background:linear-gradient(90deg,var(--a),#718fff);color:#090a0f;font-weight:900;font-size:17px;box-shadow:0 10px 35px #9b7cff3d;cursor:pointer}
+.mainbtn:active{transform:scale(.985)}
+.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}.actions button{border:1px solid var(--line);background:#13151e;color:var(--text);padding:11px 7px;border-radius:13px;cursor:pointer}
+.hidden{display:none!important}
+.name{font-size:31px;font-weight:950;letter-spacing:-.04em}.subtitle{color:var(--b);font-size:13px;margin-top:3px}.rarity{margin-top:10px;font-size:13px;color:var(--gold)}
+.tags{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px}.tag{background:#1b1e29;border:1px solid #303543;border-radius:99px;padding:7px 9px;font-size:11px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}.stat{background:#0c0e14;border:1px solid #232733;border-radius:13px;padding:10px}.stathead{display:flex;justify-content:space-between;font-size:12px}.bar{height:6px;background:#282c36;border-radius:9px;overflow:hidden;margin-top:8px}.fill{height:100%;width:0;background:linear-gradient(90deg,var(--a),var(--b));transition:width .5s ease}
+.rows{display:grid;gap:7px}.row{display:flex;justify-content:space-between;gap:12px;padding:10px;border-radius:12px;background:#0d0f16;border:1px solid #222631;font-size:12px}.row span{color:var(--muted)}.row b{text-align:right}
+.text{font-size:14px;line-height:1.58;color:#dfe2e9}.text b{color:#fff}
+.mini{font-size:11px;color:var(--muted);line-height:1.5}
+.saveitem{padding:11px 0;border-bottom:1px solid var(--line);cursor:pointer}.saveitem:last-child{border-bottom:0}.saveitem b{font-size:13px}.saveitem small{display:block;color:var(--muted);margin-top:3px}
+.empty{color:var(--muted);font-size:12px}
+.flash{animation:flash .55s ease}@keyframes flash{50%{transform:scale(1.012);filter:brightness(1.35)}}
+@media(max-width:430px){.hero h1{font-size:31px}.stats{grid-template-columns:1fr}.rolls{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
-<div class="app">
-  <div class="top"><div class="brand">ROULETTE // FORGE</div><div class="badge">v0.1 MOBILE</div></div>
-  <div class="hero"><h1>Crie um personagem.</h1><p>Cada rolagem altera atributos, potencial e consequências.</p></div>
+<main class="app">
+  <header class="header"><div class="logo">CHARACTER // ROULETTE</div><div class="version">V1.0</div></header>
 
-  <div class="card">
-    <div class="section-title">Sistema de rolagem</div>
-    <div class="roll-grid" id="liveRolls">
-      <div class="roll"><small>Espécie</small><strong>—</strong></div>
-      <div class="roll"><small>Origem</small><strong>—</strong></div>
-      <div class="roll"><small>Personalidade</small><strong>—</strong></div>
-      <div class="roll"><small>Talento</small><strong>—</strong></div>
-      <div class="roll"><small>Poder</small><strong>—</strong></div>
-      <div class="roll"><small>Destino</small><strong>—</strong></div>
-    </div>
+  <section class="hero">
+    <h1>Crie um personagem.</h1>
+    <p>O sorteio não é só visual. Cada resultado altera a ficha.</p>
+  </section>
+
+  <section class="card">
+    <div class="kicker">Rolagens</div>
+    <div class="rolls" id="rolls"></div>
+  </section>
+
+  <button class="mainbtn" id="generateBtn">🎰 GIRAR TUDO</button>
+  <div class="actions">
+    <button id="newBtn">Novo</button><button id="saveBtn">Salvar</button><button id="shareBtn">Compartilhar</button>
   </div>
 
-  <button class="spin" onclick="generate()">🎰 GIRAR TUDO</button>
-  <div class="subbuttons"><button onclick="clearAll()">Novo</button><button onclick="saveCurrent()">Salvar</button><button onclick="share()">Compartilhar</button></div>
-
-  <div id="result">
+  <section id="result" class="hidden">
     <div class="card">
-      <div class="section-title">Personagem gerado</div>
-      <div class="name" id="charName"></div><div class="subtitle" id="charTitle"></div><div class="rarity" id="rarity"></div>
+      <div class="kicker">Personagem final</div>
+      <div class="name" id="name"></div>
+      <div class="subtitle" id="subtitle"></div>
+      <div class="rarity" id="rarity"></div>
       <div class="tags" id="tags"></div>
     </div>
 
-    <div class="card"><div class="section-title">Atributos finais</div><div class="stats" id="stats"></div></div>
-    <div class="card"><div class="section-title">Identidade & origem</div><div class="story" id="identity"></div></div>
-    <div class="card"><div class="section-title">Psicologia</div><div class="story" id="psy"></div></div>
-    <div class="card"><div class="section-title">Poder / talento</div><div class="story" id="power"></div></div>
-    <div class="card"><div class="section-title">História gerada</div><div class="story" id="story"></div></div>
-  </div>
+    <div class="card">
+      <div class="kicker">Atributos</div>
+      <div class="stats" id="stats"></div>
+    </div>
 
-  <div class="card" id="historyCard">
-    <div class="section-title">Personagens salvos</div>
-    <div id="history"><div style="color:var(--muted);font-size:13px">Nenhum personagem salvo ainda.</div></div>
-  </div>
-  <div class="footer">Prototype — dados salvos apenas neste aparelho.</div>
-</div>
+    <div class="card">
+      <div class="kicker">Perfil calculado</div>
+      <div class="rows" id="profile"></div>
+    </div>
+
+    <div class="card">
+      <div class="kicker">Origem & contexto</div>
+      <div class="text" id="originText"></div>
+    </div>
+
+    <div class="card">
+      <div class="kicker">Psicologia</div>
+      <div class="text" id="psyText"></div>
+    </div>
+
+    <div class="card">
+      <div class="kicker">Talento & poder</div>
+      <div class="text" id="powerText"></div>
+    </div>
+
+    <div class="card">
+      <div class="kicker">História gerada</div>
+      <div class="text" id="storyText"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="kicker">Personagens salvos</div>
+    <div id="saved"></div>
+  </section>
+  <div class="mini" style="text-align:center">Os personagens salvos ficam no armazenamento deste navegador.</div>
+</main>
 
 <script>
+"use strict";
 
-const R = arr => arr[Math.floor(Math.random()*arr.length)];
-const clamp=(n,a=1,b=100)=>Math.max(a,Math.min(b,Math.round(n)));
-const baseStats={forca:50,velocidade:50,resistencia:50,inteligencia:50,sabedoria:50,carisma:50,disciplina:50,criatividade:50,sorte:50,combate:50,potencial:50,saude:50};
-const data={
+/* ============================================================
+   CHARACTER ROULETTE V1
+   Tudo está neste único arquivo.
+   Não existe app.js externo.
+   ============================================================ */
+
+/* ---------- UTILITÁRIOS ---------- */
+
+const $ = id => document.getElementById(id);
+
+function pick(array){
+  return array[Math.floor(Math.random() * array.length)];
+}
+
+function randomInt(min,max){
+  return Math.floor(Math.random() * (max-min+1)) + min;
+}
+
+function clamp(value,min=1,max=100){
+  return Math.max(min,Math.min(max,Math.round(value)));
+}
+
+function average(object){
+  const values = Object.values(object);
+  return values.reduce((sum,n)=>sum+n,0)/values.length;
+}
+
+function applyMods(stats,mods){
+  for(const [key,value] of Object.entries(mods || {})){
+    if(Object.prototype.hasOwnProperty.call(stats,key)) stats[key]+=value;
+  }
+}
+
+/* ---------- BANCO DE DADOS ---------- */
+/* Cada opção possui modificadores reais. */
+
+const DB = {
+
 species:[
- {n:"Humano",m:{},tag:"Versátil"},
- {n:"Elfo",m:{inteligencia:10,velocidade:8,criatividade:8,resistencia:-4},tag:"Arcano"},
- {n:"Orc",m:{forca:22,resistencia:18,velocidade:-8,inteligencia:-7},tag:"Brutal"},
- {n:"Anão",m:{forca:14,resistencia:20,velocidade:-12,disciplina:10},tag:"Inabalável"},
- {n:"Vampiro",m:{velocidade:16,carisma:10,saude:10,sorte:-4,potencial:20},tag:"Sobrenatural"},
- {n:"Demônio",m:{forca:18,carisma:8,resistencia:12,sabedoria:-6,potencial:25},tag:"Abissal"},
- {n:"Draconiano",m:{forca:20,resistencia:20,inteligencia:6,potencial:22},tag:"Dracônico"},
- {n:"Fada",m:{velocidade:18,criatividade:20,forca:-18,resistencia:-10,potencial:15},tag:"Feérico"}
+ {name:"Humano",tag:"Versátil",mods:{potencial:3}},
+ {name:"Elfo",tag:"Arcano",mods:{intelligence:10,speed:8,creativity:10,resistance:-4}},
+ {name:"Orc",tag:"Brutal",mods:{strength:22,resistance:18,speed:-8,intelligence:-7,combat:8}},
+ {name:"Anão",tag:"Inabalável",mods:{strength:14,resistance:22,speed:-12,discipline:10,health:8}},
+ {name:"Vampiro",tag:"Sobrenatural",mods:{speed:16,charisma:10,health:8,luck:-5,potential:20}},
+ {name:"Demônio",tag:"Abissal",mods:{strength:18,charisma:8,resistance:12,wisdom:-7,potential:25}},
+ {name:"Draconiano",tag:"Dracônico",mods:{strength:20,resistance:20,intelligence:6,potential:22,health:10}},
+ {name:"Fada",tag:"Feérico",mods:{speed:18,creativity:20,strength:-18,resistance:-10,potential:15}}
 ],
+
 origins:[
- {n:"Família pobre",m:{disciplina:6,resistencia:5,sorte:-8},social:-15},
- {n:"Classe média",m:{inteligencia:4,disciplina:4,saude:3},social:0},
- {n:"Família rica",m:{carisma:8,inteligencia:8,sorte:7,disciplina:-2},social:18},
- {n:"Nobreza",m:{carisma:15,sabedoria:8,disciplina:7,combate:4,sorte:8},social:30},
- {n:"Orfanato",m:{resistencia:10,sabedoria:5,disciplina:5,sorte:-10},social:-10},
- {n:"Clã guerreiro",m:{forca:10,combate:18,disciplina:10,carisma:-3},social:8},
- {n:"Academia de elite",m:{inteligencia:16,sabedoria:12,disciplina:10,combate:2},social:12}
+ {name:"Família muito pobre",social:-25,mods:{discipline:5,resistance:7,luck:-10}},
+ {name:"Classe média",social:0,mods:{intelligence:4,discipline:4,health:3}},
+ {name:"Família rica",social:22,mods:{charisma:8,intelligence:8,luck:8,discipline:-2}},
+ {name:"Nobreza",social:35,mods:{charisma:15,wisdom:8,discipline:7,combat:4,luck:8}},
+ {name:"Órfão",social:-12,mods:{resistance:12,wisdom:7,discipline:6,luck:-12}},
+ {name:"Clã guerreiro",social:10,mods:{strength:10,combat:18,discipline:10,charisma:-3}},
+ {name:"Academia de elite",social:14,mods:{intelligence:16,wisdom:12,discipline:10,creativity:5}},
+ {name:"Família de artistas",social:4,mods:{creativity:18,charisma:10,wisdom:5,discipline:-3}}
 ],
+
 personalities:[
- {n:"Arrogante",m:{carisma:7,disciplina:-8,sabedoria:-5,combate:5},tags:["Ego alto","Confrontador"]},
- {n:"Disciplinado",m:{disciplina:20,combate:8,saude:5,sorte:-2},tags:["Focado","Constante"]},
- {n:"Genial",m:{inteligencia:22,criatividade:15,disciplina:-4},tags:["Gênio","Curioso"]},
- {n:"Empático",m:{carisma:10,sabedoria:12,criatividade:6,combate:-4},tags:["Empático","Diplomático"]},
- {n:"Impulsivo",m:{velocidade:8,combate:10,disciplina:-15,sabedoria:-8},tags:["Impulsivo","Corajoso"]},
- {n:"Reservado",m:{sabedoria:10,criatividade:10,carisma:-8,disciplina:6},tags:["Observador","Introspectivo"]},
- {n:"Ambicioso",m:{carisma:8,disciplina:10,potencial:8,sabedoria:-3},tags:["Ambicioso","Competitivo"]},
- {n:"Preguiçoso",m:{criatividade:7,sorte:5,disciplina:-22,saude:-4},tags:["Preguiçoso","Improvisador"]}
+ {name:"Arrogante",tags:["Ego alto","Confrontador"],mods:{charisma:7,discipline:-8,wisdom:-5,combat:5}},
+ {name:"Disciplinado",tags:["Focado","Constante"],mods:{discipline:20,combat:8,health:5,luck:-2}},
+ {name:"Gênio",tags:["Gênio","Curioso"],mods:{intelligence:22,creativity:15,discipline:-4}},
+ {name:"Empático",tags:["Empático","Diplomático"],mods:{charisma:10,wisdom:12,creativity:6,combat:-4}},
+ {name:"Impulsivo",tags:["Impulsivo","Corajoso"],mods:{speed:8,combat:10,discipline:-15,wisdom:-8}},
+ {name:"Reservado",tags:["Observador","Introspectivo"],mods:{wisdom:10,creativity:10,charisma:-8,discipline:6}},
+ {name:"Ambicioso",tags:["Competitivo","Obstinado"],mods:{charisma:8,discipline:10,potential:8,wisdom:-3}},
+ {name:"Preguiçoso",tags:["Improvisador","Baixa disciplina"],mods:{creativity:7,luck:5,discipline:-22,health:-4}},
+ {name:"Carismático",tags:["Social","Influente"],mods:{charisma:22,wisdom:5,discipline:3}},
+ {name:"Paranoico",tags:["Desconfiado","Atento"],mods:{wisdom:10,speed:5,charisma:-10,luck:-3}}
 ],
+
 talents:[
- {n:"Força excepcional",m:{forca:25,resistencia:10,combate:8}},
- {n:"Mente analítica",m:{inteligencia:20,sabedoria:12,criatividade:8}},
- {n:"Reflexos absurdos",m:{velocidade:24,combate:12}},
- {n:"Líder nato",m:{carisma:22,sabedoria:8,disciplina:8}},
- {n:"Artista prodígio",m:{criatividade:25,carisma:8}},
- {n:"Sobrevivente",m:{resistencia:18,sabedoria:12,sorte:5,saude:8}},
- {n:"Nenhum talento evidente",m:{sorte:3}}
+ {name:"Força excepcional",mods:{strength:25,resistance:10,combat:8}},
+ {name:"Mente analítica",mods:{intelligence:20,wisdom:12,creativity:8}},
+ {name:"Reflexos absurdos",mods:{speed:24,combat:12}},
+ {name:"Líder nato",mods:{charisma:22,wisdom:8,discipline:8}},
+ {name:"Artista prodígio",mods:{creativity:25,charisma:8}},
+ {name:"Sobrevivente",mods:{resistance:18,wisdom:12,luck:5,health:8}},
+ {name:"Aprendiz rápido",mods:{intelligence:12,discipline:10,potential:14}},
+ {name:"Nenhum talento evidente",mods:{luck:3}}
 ],
+
 powers:[
- {n:"Nenhum poder",m:{potencial:-8},power:0},
- {n:"Pirocinese",m:{potencial:15,inteligencia:5,combate:10},power:72},
- {n:"Telepatia",m:{potencial:22,inteligencia:12,sabedoria:8},power:84},
- {n:"Regeneração",m:{potencial:18,saude:25,resistencia:8},power:80},
- {n:"Manipulação temporal",m:{potencial:38,inteligencia:12,sabedoria:8,disciplina:-5},power:98},
- {n:"Manipulação da gravidade",m:{potencial:30,forca:8,inteligencia:10},power:93},
- {n:"Controle de sombras",m:{potencial:24,velocidade:8,criatividade:10,carisma:4},power:87},
- {n:"Transmutação",m:{potencial:28,inteligencia:16,criatividade:12},power:92}
+ {name:"Nenhum poder",power:0,rarity:0,mods:{potential:-8}},
+ {name:"Pirocinese",power:72,rarity:12,mods:{potential:15,intelligence:5,combat:10}},
+ {name:"Telepatia",power:84,rarity:17,mods:{potential:22,intelligence:12,wisdom:8}},
+ {name:"Regeneração",power:80,rarity:15,mods:{potential:18,health:25,resistance:8}},
+ {name:"Manipulação temporal",power:98,rarity:30,mods:{potential:38,intelligence:12,wisdom:8,discipline:-5}},
+ {name:"Manipulação da gravidade",power:93,rarity:27,mods:{potential:30,strength:8,intelligence:10}},
+ {name:"Controle de sombras",power:87,rarity:21,mods:{potential:24,speed:8,creativity:10,charisma:4}},
+ {name:"Transmutação",power:92,rarity:25,mods:{potential:28,intelligence:16,creativity:12}},
+ {name:"Telecinese",power:88,rarity:22,mods:{potential:25,intelligence:10,discipline:7}},
+ {name:"Ilusão",power:82,rarity:16,mods:{potential:20,creativity:18,charisma:5}}
 ],
-destiny:[
- {n:"Vida comum",m:{sorte:4},risk:15},
- {n:"Herói improvável",m:{coragem:0,carisma:5,potencial:10,sorte:8},risk:55},
- {n:"Vilão em ascensão",m:{potencial:18,carisma:8,sabedoria:-5,sorte:2},risk:78},
- {n:"Lenda mundial",m:{potencial:25,carisma:12,sorte:12},risk:92},
- {n:"Tragédia anunciada",m:{sorte:-22,saude:-8,potencial:8},risk:95}
+
+destinies:[
+ {name:"Vida comum",risk:10,mods:{luck:5}},
+ {name:"Herói improvável",risk:55,mods:{charisma:5,potential:10,luck:8}},
+ {name:"Vilão em ascensão",risk:78,mods:{potential:18,charisma:8,wisdom:-5,luck:2}},
+ {name:"Lenda mundial",risk:92,mods:{potential:25,charisma:12,luck:12}},
+ {name:"Tragédia anunciada",risk:95,mods:{luck:-22,health:-8,potential:8,resistance:8}}
 ],
-names:["Kael","Auren","Nox","Eryon","Lys","Darian","Riven","Aster","Mika","Zeph","Orion","Varek","Elian","Nyra","Soren"],
-titles:["o Inesperado","o Último Herdeiro","o Sem-Nome","o Quebrador de Destinos","o Escolhido","o Sobrevivente","o Prodígio","o Condenado"]
+
+firstNames:["Kael","Auren","Nox","Eryon","Lys","Darian","Riven","Aster","Mika","Zeph","Orion","Varek","Elian","Nyra","Soren","Ayla","Ren","Kairo","Luna","Veyra"],
+lastNames:["Valen","Drake","Noctis","Ardent","Mori","Astra","Raven","Kane","Solari","Voss"],
+titles:["o Inesperado","o Último Herdeiro","o Sem-Nome","o Quebrador de Destinos","o Escolhido","o Sobrevivente","o Prodígio","o Condenado","o Improvável"]
 };
-let current=null;
 
-function mod(obj, stats){for(const [k,v] of Object.entries(obj||{})){if(k in stats)stats[k]+=v}}
-function generate(){
- const rolls={species:R(data.species),origin:R(data.origins),personality:R(data.personalities),talent:R(data.talents),power:R(data.powers),destiny:R(data.destiny)};
- const s={...baseStats}; Object.values(rolls).forEach(x=>mod(x.m,s));
- // hidden interaction rules: results influence each other
- if(rolls.species.n==="Vampiro" && rolls.origin.n==="Nobreza"){s.carisma+=8;s.sorte+=5}
- if(rolls.personality.n==="Genial" && rolls.talent.n==="Mente analítica"){s.inteligencia+=10;s.potencial+=6}
- if(rolls.personality.n==="Disciplinado" && rolls.power.power>=90){s.potencial+=8;s.disciplina+=7}
- if(rolls.personality.n==="Preguiçoso" && rolls.power.n!=="Nenhum poder"){s.disciplina-=8;s.potencial-=5}
- if(rolls.destiny.n==="Tragédia anunciada"){s.resistencia+=8;s.sabedoria+=5}
- if(rolls.destiny.n==="Lenda mundial"){s.carisma+=8;s.potencial+=8}
- for(const k in s)s[k]=clamp(s[k]);
- const avg=Object.values(s).reduce((a,b)=>a+b,0)/Object.keys(s).length;
- const rarity=clamp(avg/1.15 + (rolls.power.power||0)*.12 + (rolls.species.n==="Humano"?0:7),1,100);
- const rank=rarity>=90?"★★★★★ LENDÁRIO":rarity>=78?"★★★★☆ ÉPICO":rarity>=62?"★★★☆☆ RARO":rarity>=45?"★★☆☆☆ INCOMUM":"★☆☆☆☆ COMUM";
- const name=R(names)+" "+R(titles);
- current={rolls,s,avg,rarity,rank,name};
- render();
- document.getElementById("result").style.display="block";
- document.getElementById("result").classList.remove("flash"); void document.getElementById("result").offsetWidth; document.getElementById("result").classList.add("flash");
-}
-function render(){
- const r=current.rolls,s=current.s;
- const live=[["Espécie",r.species.n],["Origem",r.origin.n],["Personalidade",r.personality.n],["Talento",r.talent.n],["Poder",r.power.n],["Destino",r.destiny.n]];
- document.getElementById("liveRolls").innerHTML=live.map(x=>`<div class="roll"><small>${x[0]}</small><strong>${x[1]}</strong></div>`).join("");
- document.getElementById("charName").textContent=current.name;
- document.getElementById("charTitle").textContent=`${r.species.tag||"Indivíduo"} • ${r.power.n}`;
- document.getElementById("rarity").textContent=`${current.rank}  •  Índice geral ${Math.round(current.avg)}/100`;
- document.getElementById("tags").innerHTML=[r.species.tag,r.personality.n,r.talent.n,r.destiny.n].map(t=>`<span class="tag">${t}</span>`).join("");
- const labels={forca:"Força",velocidade:"Velocidade",resistencia:"Resistência",inteligencia:"Inteligência",sabedoria:"Sabedoria",carisma:"Carisma",disciplina:"Disciplina",criatividade:"Criatividade",sorte:"Sorte",combate:"Combate",potencial:"Potencial",saude:"Saúde"};
- document.getElementById("stats").innerHTML=Object.entries(s).map(([k,v])=>`<div class="stat"><div class="stat-head"><span>${labels[k]}</span><b>${v}</b></div><div class="bar"><div class="fill" style="width:${v}%"></div></div></div>`).join("");
- document.getElementById("identity").innerHTML=`<b>Espécie:</b> ${r.species.n}<br><b>Origem:</b> ${r.origin.n}<br><b>Talento:</b> ${r.talent.n}<br><b>Status social:</b> ${r.origin.social>20?"Muito alto":r.origin.social>5?"Acima da média":r.origin.social<0?"Baixo":"Médio"}`;
- document.getElementById("psy").innerHTML=`<b>Personalidade:</b> ${r.personality.n}.<br>${r.personality.tags?.join(" • ")||""}<br><br>As características foram incorporadas aos atributos; por isso a mesma personalidade produz resultados diferentes dependendo de espécie, origem e talento.`;
- document.getElementById("power").innerHTML=`<b>${r.power.n}</b><br>Potência estimada: ${r.power.power||"—"}/100.<br><br>O poder modifica diretamente potencial e outros atributos. Poderes raros também elevam a raridade final.`;
- const tension = r.destiny.n==="Tragédia anunciada" ? "Apesar do potencial, o destino impõe uma trajetória de perdas e pressão." : r.destiny.n==="Lenda mundial" ? "As circunstâncias favorecem uma trajetória extraordinária e de grande impacto." : "Seu destino ainda é relativamente aberto, permitindo que escolhas futuras tenham grande peso.";
- document.getElementById("story").innerHTML=`${current.name} nasceu como ${r.species.n.toLowerCase()}, em uma ${r.origin.n.toLowerCase()}. Seu ${r.talent.n.toLowerCase()} moldou a forma como aprendeu a sobreviver e crescer. Sua personalidade ${r.personality.n.toLowerCase()} cria vantagens e limitações próprias. ${r.power.n==="Nenhum poder"?"Não possui poderes sobrenaturais conhecidos.":`Despertou ${r.power.n.toLowerCase()}, uma capacidade de potencial ${r.power.power}/100.`} ${tension}`;
-}
-function saveCurrent(){
- if(!current){generate();return}
- const arr=JSON.parse(localStorage.getItem("forge_history")||"[]"); arr.unshift(current); localStorage.setItem("forge_history",JSON.stringify(arr.slice(0,20))); loadHistory();
-}
-function loadHistory(){
- const arr=JSON.parse(localStorage.getItem("forge_history")||"[]"); const h=document.getElementById("history");
- h.innerHTML=arr.length?arr.map((x,i)=>`<div class="history-item" onclick="loadSaved(${i})"><b>${x.name}</b> <span>${x.rank} • ${x.rolls.species.n} • ${x.rolls.power.n}</span></div>`).join(""):"<div style='color:var(--muted);font-size:13px'>Nenhum personagem salvo ainda.</div>";
-}
-function loadSaved(i){const a=JSON.parse(localStorage.getItem("forge_history")||"[]");current=a[i];render();document.getElementById("result").style.display="block";window.scrollTo({top:0,behavior:"smooth"})}
-function clearAll(){current=null;document.getElementById("result").style.display="none";document.getElementById("liveRolls").innerHTML=["Espécie","Origem","Personalidade","Talento","Poder","Destino"].map(x=>`<div class="roll"><small>${x}</small><strong>—</strong></div>`).join("")}
-async function share(){if(!current)return;const text=`${current.name}\n${current.rank}\n${current.rolls.species.n} • ${current.rolls.power.n}\nForça ${current.s.forca} | INT ${current.s.inteligencia} | POT ${current.s.potencial}`; if(navigator.share)await navigator.share({title:"Meu personagem",text});else alert(text)}
-loadHistory();
+/* ---------- ATRIBUTOS BASE ---------- */
 
+function createBaseStats(){
+  return {
+    strength:randomInt(35,65),
+    speed:randomInt(35,65),
+    resistance:randomInt(35,65),
+    intelligence:randomInt(35,65),
+    wisdom:randomInt(35,65),
+    charisma:randomInt(35,65),
+    discipline:randomInt(35,65),
+    creativity:randomInt(35,65),
+    luck:randomInt(25,75),
+    combat:randomInt(30,65),
+    potential:randomInt(35,70),
+    health:randomInt(40,70)
+  };
+}
+
+/* ---------- INTERAÇÕES ENTRE RESULTADOS ---------- */
+/* Aqui o personagem deixa de ser uma simples soma. */
+
+function applyInteractions(c){
+
+  const {stats:s,species,origin,personality,talent,power,destiny}=c;
+
+  // Espécie + origem
+  if(species.name==="Vampiro" && origin.name==="Nobreza"){
+    s.charisma+=8;s.luck+=5;c.interactions.push("Vampiro nobre: +8 Carisma, +5 Sorte");
+  }
+
+  if(species.name==="Orc" && origin.name==="Clã guerreiro"){
+    s.strength+=10;s.combat+=12;s.resistance+=8;
+    c.interactions.push("Orc de clã guerreiro: enorme sinergia física");
+  }
+
+  if(species.name==="Elfo" && origin.name==="Academia de elite"){
+    s.intelligence+=8;s.potential+=8;
+    c.interactions.push("Elfo acadêmico: forte afinidade arcana");
+  }
+
+  // Personalidade + talento
+  if(personality.name==="Gênio" && talent.name==="Mente analítica"){
+    s.intelligence+=10;s.creativity+=6;s.potential+=6;
+    c.interactions.push("Gênio + mente analítica: inteligência excepcional");
+  }
+
+  if(personality.name==="Disciplinado" && talent.name==="Força excepcional"){
+    s.strength+=5;s.combat+=8;s.discipline+=8;
+    c.interactions.push("Disciplina + força: treinamento extremamente eficiente");
+  }
+
+  if(personality.name==="Preguiçoso" && talent.name==="Aprendiz rápido"){
+    s.intelligence+=5;s.creativity+=5;s.discipline-=8;
+    c.interactions.push("Aprendiz rápido preguiçoso: aprende rápido, mas pouco pratica");
+  }
+
+  // Poder + personalidade
+  if(power.power>=90 && personality.name==="Disciplinado"){
+    s.potential+=8;s.discipline+=7;
+    c.interactions.push("Poder extremo + disciplina: controle acima da média");
+  }
+
+  if(power.power>=90 && personality.name==="Impulsivo"){
+    s.combat+=7;s.discipline-=10;
+    c.interactions.push("Poder extremo + impulsividade: grande força, baixo controle");
+  }
+
+  if(power.name==="Manipulação temporal" && talent.name==="Mente analítica"){
+    s.intelligence+=8;s.wisdom+=8;s.potential+=8;
+    c.interactions.push("Tempo + mente analítica: compreensão temporal avançada");
+  }
+
+  // Destino + atributos
+  if(destiny.name==="Lenda mundial"){
+    s.charisma+=8;s.potential+=8;
+    c.interactions.push("Destino lendário: potencial social elevado");
+  }
+
+  if(destiny.name==="Tragédia anunciada"){
+    s.wisdom+=7;s.resistance+=7;
+    c.interactions.push("Destino trágico: sofrimento gera resistência e sabedoria");
+  }
+
+  // Regra de equilíbrio: potencial muito alto aumenta pressão.
+  if(s.potential>=90){
+    s.discipline-=3;
+    c.interactions.push("Potencial extremo: +pressão sobre desenvolvimento");
+  }
+
+  // Nenhum poder + talento físico
+  if(power.name==="Nenhum poder" && (talent.name==="Força excepcional" || talent.name==="Reflexos absurdos")){
+    s.combat+=7;s.resistance+=5;
+    c.interactions.push("Especialista físico: compensa ausência de poder");
+  }
+}
+
+/* ---------- CÁLCULOS DERIVADOS ---------- */
+
+function calculateDerived(c){
+  const s=c.stats;
+
+  c.powerScore=clamp((c.power.power || 0)*.65 + s.potential*.35,1,100);
+
+  c.socialScore=clamp(
+    s.charisma*.45+s.wisdom*.2+s.intelligence*.15+s.discipline*.1+(c.origin.social*.1)+s.luck*.1
+  );
+
+  c.survivalScore=clamp(
+    s.health*.25+s.resistance*.25+s.wisdom*.15+s.speed*.1+s.luck*.15+s.combat*.1
+  );
+
+  c.threatScore=clamp(
+    s.strength*.2+s.speed*.12+s.resistance*.12+s.combat*.25+c.powerScore*.2+s.charisma*.11
+  );
+
+  c.lifePotential=clamp(
+    s.potential*.3+s.intelligence*.15+s.discipline*.15+s.health*.1+s.charisma*.1+s.creativity*.1+s.luck*.1
+  );
+
+  c.overall=clamp(
+    average(s)*.7+c.powerScore*.1+c.socialScore*.07+c.survivalScore*.08+c.lifePotential*.05
+  );
+
+  c.rarityScore=clamp(
+    c.overall*.55+(c.power.rarity||0)*.7+(c.species.name==="Humano"?0:8)
+  );
+
+  if(c.rarityScore>=90)c.rarity="★★★★★ LENDÁRIO";
+  else if(c.rarityScore>=78)c.rarity="★★★★☆ ÉPICO";
+  else if(c.rarityScore>=62)c.rarity="★★★☆☆ RARO";
+  else if(c.rarityScore>=45)c.rarity="★★☆☆☆ INCOMUM";
+  else c.rarity="★☆☆☆☆ COMUM";
+}
+
+/* ---------- GERAÇÃO ---------- */
+
+function generateCharacter(){
+  const character={
+    species:pick(DB.species),
+    origin:pick(DB.origins),
+    personality:pick(DB.personalities),
+    talent:pick(DB.talents),
+    power:pick(DB.powers),
+    destiny:pick(DB.destinies),
+    stats:createBaseStats(),
+    interactions:[]
+  };
+
+  applyMods(character.stats,character.species.mods);
+  applyMods(character.stats,character.origin.mods);
+  applyMods(character.stats,character.personality.mods);
+  applyMods(character.stats,character.talent.mods);
+  applyMods(character.stats,character.power.mods);
+  applyMods(character.stats,character.destiny.mods);
+
+  applyInteractions(character);
+
+  for(const key of Object.keys(character.stats)){
+    character.stats[key]=clamp(character.stats[key]);
+  }
+
+  calculateDerived(character);
+
+  character.name=pick(DB.firstNames)+" "+pick(DB.lastNames);
+  character.title=pick(DB.titles);
+  character.age=randomInt(17,45);
+  character.height=randomInt(155,205);
+  character.weight=randomInt(50,115);
+
+  return character;
+}
+
+/* ---------- INTERFACE ---------- */
+
+const statLabels={
+  strength:"Força",speed:"Velocidade",resistance:"Resistência",
+  intelligence:"Inteligência",wisdom:"Sabedoria",charisma:"Carisma",
+  discipline:"Disciplina",creativity:"Criatividade",luck:"Sorte",
+  combat:"Combate",potential:"Potencial",health:"Saúde"
+};
+
+function renderRolls(c){
+  const items=[
+    ["Espécie",c.species.name],
+    ["Origem",c.origin.name],
+    ["Personalidade",c.personality.name],
+    ["Talento",c.talent.name],
+    ["Poder",c.power.name],
+    ["Destino",c.destiny.name]
+  ];
+
+  $("rolls").innerHTML=items.map(([a,b])=>
+    `<div class="roll"><small>${a}</small><strong>${b}</strong></div>`
+  ).join("");
+}
+
+function renderStats(c){
+  $("stats").innerHTML=Object.entries(c.stats).map(([key,value])=>
+    `<div class="stat">
+      <div class="stathead"><span>${statLabels[key]}</span><b>${value}</b></div>
+      <div class="bar"><div class="fill" style="width:${value}%"></div></div>
+    </div>`
+  ).join("");
+}
+
+function renderProfile(c){
+  const rows=[
+    ["Índice geral",`${c.overall}/100`],
+    ["Potencial de vida",`${c.lifePotential}/100`],
+    ["Poder",`${c.powerScore}/100`],
+    ["Influência social",`${c.socialScore}/100`],
+    ["Sobrevivência",`${c.survivalScore}/100`],
+    ["Nível de ameaça",`${c.threatScore}/100`],
+    ["Idade",`${c.age} anos`],
+    ["Altura",`${c.height} cm`],
+    ["Peso",`${c.weight} kg`]
+  ];
+  $("profile").innerHTML=rows.map(([a,b])=>`<div class="row"><span>${a}</span><b>${b}</b></div>`).join("");
+}
+
+function renderCharacter(c){
+  renderRolls(c);
+
+  $("name").textContent=c.name;
+  $("subtitle").textContent=`${c.title} • ${c.species.tag} • ${c.power.name}`;
+  $("rarity").textContent=`${c.rarity}  •  Índice geral ${c.overall}/100`;
+
+  const tags=[
+    c.species.tag,c.personality.name,c.talent.name,c.destiny.name,
+    ...(c.personality.tags||[])
+  ];
+
+  $("tags").innerHTML=tags.map(t=>`<span class="tag">${t}</span>`).join("");
+
+  renderStats(c);
+  renderProfile(c);
+
+  $("originText").innerHTML=
+    `<b>${c.name}</b> nasceu como <b>${c.species.name}</b>, em uma <b>${c.origin.name.toLowerCase()}</b>. `+
+    `Seu contexto social inicial é classificado como <b>${c.origin.social>20?"muito alto":c.origin.social>5?"alto":c.origin.social<0?"baixo":"médio"}</b>. `+
+    `A origem modificou diretamente atributos como disciplina, inteligência, resistência e sorte.`;
+
+  $("psyText").innerHTML=
+    `Sua personalidade é <b>${c.personality.name}</b>. `+
+    `Isso alterou diretamente a ficha e influencia como ele tende a agir. `+
+    `Características psicológicas: <b>${(c.personality.tags||[]).join(", ")||"não especificadas"}</b>. `+
+    `O resultado psicológico nunca é puramente decorativo: ele modifica os atributos e pode criar sinergias ou conflitos.`;
+
+  $("powerText").innerHTML=
+    `<b>${c.power.name}</b> possui potência ${c.power.power}/100 e raridade própria ${c.power.rarity}/30. `+
+    `O talento natural é <b>${c.talent.name}</b>. `+
+    `Juntos, poder e talento alteraram potencial, combate, inteligência e/ou outros atributos.`;
+
+  const interactions=c.interactions.length
+    ? `<br><br><b>Interações detectadas:</b><br>• ${c.interactions.join("<br>• ")}`
+    : "";
+
+  $("storyText").innerHTML=
+    `${c.name} começa sua trajetória com ${c.overall}/100 de índice geral. `+
+    `${c.power.name==="Nenhum poder"?"Não possui um poder sobrenatural conhecido.":"Seu poder é "+c.power.name.toLowerCase()+"."} `+
+    `Seu maior destaque atual é <b>${bestStat(c)}</b>, enquanto sua maior limitação é <b>${worstStat(c)}</b>. `+
+    `${c.destiny.name==="Tragédia anunciada"
+      ?"O destino indica uma trajetória marcada por perdas, mas essas experiências podem aumentar sua resistência."
+      :c.destiny.name==="Lenda mundial"
+      ?"O destino aponta para uma trajetória excepcional, com grande potencial de influência."
+      :"O futuro permanece relativamente aberto e as próximas escolhas podem alterar profundamente sua trajetória."}`
+    + interactions;
+
+  $("result").classList.remove("hidden");
+  $("result").classList.remove("flash");
+  void $("result").offsetWidth;
+  $("result").classList.add("flash");
+}
+
+function bestStat(c){
+  return statLabels[Object.entries(c.stats).sort((a,b)=>b[1]-a[1])[0][0]];
+}
+
+function worstStat(c){
+  return statLabels[Object.entries(c.stats).sort((a,b)=>a[1]-b[1])[0][0]];
+}
+
+/* ---------- SALVAMENTO ---------- */
+
+function getSaved(){
+  try{return JSON.parse(localStorage.getItem("character_roulette_v1")||"[]")}
+  catch(e){return[]}
+}
+
+function setSaved(list){
+  localStorage.setItem("character_roulette_v1",JSON.stringify(list));
+}
+
+function saveCharacter(){
+  if(!current){
+    alert("Gere um personagem primeiro.");
+    return;
+  }
+
+  const list=getSaved();
+  list.unshift(current);
+  setSaved(list.slice(0,30));
+  renderSaved();
+  alert("Personagem salvo!");
+}
+
+function renderSaved(){
+  const list=getSaved();
+
+  if(!list.length){
+    $("saved").innerHTML='<div class="empty">Nenhum personagem salvo ainda.</div>';
+    return;
+  }
+
+  $("saved").innerHTML=list.map((c,i)=>
+    `<div class="saveitem" data-index="${i}">
+      <b>${c.name}</b>
+      <small>${c.rarity} • ${c.species.name} • ${c.power.name}</small>
+    </div>`
+  ).join("");
+
+  document.querySelectorAll(".saveitem").forEach(el=>{
+    el.addEventListener("click",()=>{
+      current=list[Number(el.dataset.index)];
+      renderCharacter(current);
+      window.scrollTo({top:0,behavior:"smooth"});
+    });
+  });
+}
+
+/* ---------- COMPARTILHAMENTO ---------- */
+
+async function shareCharacter(){
+  if(!current){
+    alert("Gere um personagem primeiro.");
+    return;
+  }
+
+  const text=
+`${current.name} — ${current.title}
+${current.rarity}
+Espécie: ${current.species.name}
+Poder: ${current.power.name}
+Índice geral: ${current.overall}/100
+Força: ${current.stats.strength} • Inteligência: ${current.stats.intelligence} • Potencial: ${current.stats.potential}`;
+
+  try{
+    if(navigator.share){
+      await navigator.share({title:"Meu personagem",text});
+    }else{
+      await navigator.clipboard.writeText(text);
+      alert("Ficha copiada!");
+    }
+  }catch(e){}
+}
+
+/* ---------- NOVO ---------- */
+
+function newCharacter(){
+  current=null;
+  $("result").classList.add("hidden");
+  $("rolls").innerHTML=[
+    "Espécie","Origem","Personalidade","Talento","Poder","Destino"
+  ].map(x=>`<div class="roll"><small>${x}</small><strong>—</strong></div>`).join("");
+}
+
+/* ---------- EVENTOS ---------- */
+
+$("generateBtn").addEventListener("click",()=>{
+  current=generateCharacter();
+  renderCharacter(current);
+});
+
+$("newBtn").addEventListener("click",newCharacter);
+$("saveBtn").addEventListener("click",saveCharacter);
+$("shareBtn").addEventListener("click",shareCharacter);
+
+renderSaved();
+newCharacter();
 </script>
 </body>
 </html>
