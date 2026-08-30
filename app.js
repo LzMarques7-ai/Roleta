@@ -27,28 +27,68 @@ function list(k){
 }
 
 function pick(k){
-  if(k==="race") return RV.race();
-  if(k==="name") return {name:RV.name()};
-  if(k==="hasPower") return {name:RV.yesPower()?"Sim":"Não"};
-  if(k==="power") return RV.power();
+  const safeNorm = value => {
+    if(Array.isArray(value)){
+      return {name:String(value[0] ?? "—"), value:value[1]};
+    }
+    if(value && typeof value === "object"){
+      return {name:String(value.name ?? value.label ?? "—"), value:value.value};
+    }
+    if(value != null) return {name:String(value)};
+    return {name:"—"};
+  };
 
-  const libraryKey = {
-    title:"titles",
-    age:"ages",
+  const safeLibraryPick = key => {
+    const pool = window.LIBRARY?.[key];
+    if(!Array.isArray(pool) || pool.length === 0) return null;
+    return safeNorm(pool[RV.randomInt(pool.length)]);
+  };
+
+  if(k==="race") return safeNorm(RV.race());
+  if(k==="name") return {name:String(RV.name())};
+  if(k==="hasPower") return {name:RV.yesPower() ? "Sim" : "Não"};
+  if(k==="power") return safeNorm(RV.power());
+
+  /* TÍTULO e IDADE são as duas categorias que têm nomes diferentes
+     entre a pergunta, o engine e a biblioteca. Elas são resolvidas
+     diretamente pelas chaves reais da LIBRARY. */
+  if(k==="title"){
+    return safeLibraryPick("titles")
+      || {name:"Ninguém"};
+  }
+
+  if(k==="age"){
+    return safeLibraryPick("ages")
+      || {name:"18 anos"};
+  }
+
+  /* Categorias que usam as chaves reais do engine. */
+  const engineKey = {
+    appearance:"appearance",
+    condition:"condition",
+    force:"force",
     speed:"speed",
     intelligence:"intelligence",
     combat:"combat",
-    weapons:"weapons"
+    talent:"talent",
+    control:"control",
+    weapons:"weapons",
+    potential:"potential",
+    life:"life"
   }[k];
 
-  if(libraryKey && window.LIBRARY && Array.isArray(LIBRARY[libraryKey]) && LIBRARY[libraryKey].length){
-    return RV.norm(LIBRARY[libraryKey][RV.randomInt(LIBRARY[libraryKey].length)]);
+  if(engineKey && typeof RV.draw==="function"){
+    try{
+      const value=RV.draw(engineKey);
+      if(value && value.name) return safeNorm(value);
+    }catch(error){
+      console.warn("Falha no sorteio de", k, error);
+    }
   }
 
-  if(typeof RV.draw==="function"){
-    const value=RV.draw(k);
-    if(value) return RV.norm(value);
-  }
+  /* Último fallback: biblioteca direta. */
+  const direct = safeLibraryPick(k);
+  if(direct) return direct;
 
   return {name:"—"};
 }
