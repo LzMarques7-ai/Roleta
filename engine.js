@@ -1,102 +1,116 @@
-/* ROULETA DA VIDA V7 — motor
-   Ideias: sorteio uniforme, PCG combinatório, consequências sem alterar
-   as chances e cache seguro das fontes externas.
+/* ROULETA DA VIDA V8 — motor de sorteio, perfil de poder e raridade.
+   Princípio: cada opção da biblioteca tem a mesma chance de cair.
+   Raridade NÃO participa do sorteio; é uma leitura posterior do personagem.
 */
 const RNG = {
   uint32(){
-    const a = new Uint32Array(1);
-    if (globalThis.crypto?.getRandomValues) crypto.getRandomValues(a);
-    else a[0] = Math.floor(Math.random()*4294967296);
+    const a=new Uint32Array(1);
+    if(globalThis.crypto?.getRandomValues) globalThis.crypto.getRandomValues(a);
+    else a[0]=Math.floor(Math.random()*4294967296);
     return a[0];
   },
   int(max){
-    if(max<=1) return 0;
-    const limit = Math.floor(4294967296/max)*max;
+    if(max<=1)return 0;
+    const limit=Math.floor(4294967296/max)*max;
     let x;
-    do { x=this.uint32(); } while(x>=limit);
+    do{x=this.uint32()}while(x>=limit);
     return x%max;
   },
-  pick(arr){ return arr[RNG.int(arr.length)]; }
+  pick(arr){return arr[RNG.int(arr.length)]},
+  chance(percent){return RNG.int(100)<percent}
 };
 
 function normalizeItem(x){
-  if(typeof x === 'string') return {name:x, tags:[], effects:{}};
-  return x;
+  if(typeof x==='string') return {name:x};
+  if(Array.isArray(x)) return {name:x[0],effects:x[1]||{},ref:x[2]||''};
+  return x||{name:'—'};
 }
-function unique(items){
-  const seen=new Set(); const out=[];
-  for(const x of items||[]){
-    const k=normalizeItem(x).name;
-    if(k && !seen.has(k)){seen.add(k);out.push(normalizeItem(x));}
-  }
-  return out;
-}
-function clamp(n,a=0,b=100){return Math.max(a,Math.min(b,Math.round(n)));}
-function sumEffects(...items){
-  const out={};
-  for(const item of items.flat()) for(const [k,v] of Object.entries(normalizeItem(item).effects||{})) out[k]=(out[k]||0)+v;
-  return out;
-}
-function makePower(){
-  const ai=RNG.int(POWER_ACTIONS.length),di=RNG.int(POWER_DOMAINS.length),ri=RNG.int(POWER_RANGES.length),mi=RNG.int(POWER_MODIFIERS.length),fi=RNG.int(POWER_FOCUSES.length);
-  const a=POWER_ACTIONS[ai],d=POWER_DOMAINS[di],r=POWER_RANGES[ri],m=POWER_MODIFIERS[mi],focus=POWER_FOCUSES[fi];
-  const slot=((((ai*POWER_DOMAINS.length)+di)*POWER_RANGES.length+ri)*POWER_MODIFIERS.length+mi)*POWER_FOCUSES.length+fi;
-  return {name:`${a} ${d}`,detail:`${r}; ${m}; foco em ${focus}`,tags:[d,focus],effects:POWER_EFFECTS[d]||{Poder:25},slot};
-}
-function buildPowerPool(){
-  const out=[];
-  for(const action of POWER_ACTIONS)
-    for(const domain of POWER_DOMAINS)
-      for(const range of POWER_RANGES)
-        for(const modifier of POWER_MODIFIERS)
-          out.push({name:`${action} ${domain}`,detail:`${range}; ${modifier}`,tags:[domain],effects:POWER_EFFECTS[domain]||{Poder:20}});
-  return out;
-}
-function draw(key, remote=[]){
-  if(key==='powerRefs') return makePower();
-  const list=unique([...(LIBRARY[key]||[]),...(remote||[])]);
+function label(x){return normalizeItem(x).name}
+function listFor(key){return (LIBRARY[key]||[]).map(normalizeItem)}
+function draw(key){
+  const list=listFor(key);
+  if(!list.length) return {name:'—'};
   return list[RNG.int(list.length)];
 }
-function numeric(item,fallback=50){
-  const v=normalizeItem(item); return Number.isFinite(v.value)?v.value:fallback;
+function drawPower(){
+  const actions=POWER_ACTIONS.map(normalizeItem), domains=POWER_DOMAINS.map(normalizeItem), modifiers=POWER_MODIFIERS.map(normalizeItem);
+  const a=RNG.pick(actions),d=RNG.pick(domains),m=RNG.pick(modifiers);
+  const name=a.name+' '+d.name;
+  const detail=m.name;
+  const effects={...(POWER_EFFECTS[d.name]||{}),...(m.effects||{})};
+  return {name,detail,ref:d.ref||a.ref||'',effects,tags:[a.name,d.name,m.name]};
+}
+function drawFor(key){
+  if(key==='hasPower') return RNG.chance(70)?{name:'Sim',effects:{}}:{name:'Não',effects:{}};
+  if(key==='power') return drawPower();
+  return draw(key);
+}
+
+/* A V8 abandona a média "peso 100". Cada eixo recebe um nível qualitativo.
+   O perfil final é lido por patamares, coerência e feitos extremos. */
+const AXES=['Força','Resistência','Velocidade','Inteligência','Combate','Poder'];
+function numericValue(item){
+  const x=normalizeItem(item);
+  if(Number.isFinite(x.value)) return x.value;
+  return 50;
+}
+function clamp(n,a=0,b=100){return Math.max(a,Math.min(b,Math.round(n)))}
+function collectEffects(...items){
+  const out={};
+  for(const item of items.flat()) for(const [k,v] of Object.entries(normalizeItem(item).effects||{})) out[k]=(out[k]||0)+Number(v||0);
+  return out;
+}
+function tier(v){
+  if(v<15)return {name:'Humano',rank:0};
+  if(v<30)return {name:'Baixo',rank:1};
+  if(v<45)return {name:'Comum',rank:2};
+  if(v<60)return {name:'Treinado',rank:3};
+  if(v<72)return {name:'Excepcional',rank:4};
+  if(v<82)return {name:'Sobrenatural',rank:5};
+  if(v<90)return {name:'Monstruoso',rank:6};
+  if(v<96)return {name:'Lendário',rank:7};
+  if(v<99)return {name:'Divino',rank:8};
+  return {name:'Transcendente',rank:9};
 }
 function deriveStats(p){
-  const e=sumEffects(p.race,p.title,p.age,p.physical,p.speed,p.intelligence,p.combat,p.power,p.weapon);
-  const base={
-    Força:numeric(p.physical,50), Resistência:numeric(p.physical,50), Velocidade:numeric(p.speed,50),
-    Inteligência:numeric(p.intelligence,50), Combate:numeric(p.combat,50), Poder:p.hasPower?numeric(p.power,0):0
+  const effects=collectEffects(p.race,p.title,p.age,p.physical,p.speed,p.intelligence,p.combat,p.weapon,p.power);
+  const stats={
+    Força: numericValue(p.physical),
+    Resistência: numericValue(p.physical),
+    Velocidade: numericValue(p.speed),
+    Inteligência: numericValue(p.intelligence),
+    Combate: numericValue(p.combat),
+    Poder: p.hasPower?52:0
   };
-  for(const [k,v] of Object.entries(e)) if(k in base) base[k]+=v;
-  for(const k of Object.keys(base)) base[k]=clamp(base[k]);
-  if(!p.hasPower) base.Poder=0;
-  const avg=Object.values(base).reduce((a,b)=>a+b,0)/(Object.keys(base).length);
-  const peak=Math.max(...Object.values(base));
-  const rarityScore=clamp(avg*0.72+peak*0.28);
-  return {stats:base,score:Math.round(rarityScore)};
+  for(const [k,v] of Object.entries(effects)) if(k in stats) stats[k]=clamp(stats[k]+v);
+  if(!p.hasPower)stats.Poder=0;
+  const tiers=Object.fromEntries(AXES.map(k=>[k,tier(stats[k])]));
+  const ranks=AXES.map(k=>tiers[k].rank).sort((a,b)=>b-a);
+  const peak=ranks[0], top3=ranks.slice(0,3).reduce((a,b)=>a+b,0), extremes=ranks.filter(x=>x>=8).length;
+  let className='';
+  if(peak>=9 || extremes>=2) className='Transcendente';
+  else if(peak>=8) className='Divino';
+  else if(peak>=7 || (peak>=6&&top3>=17)) className='Lendário';
+  else if(peak>=6 || top3>=14) className='Mítico';
+  else if(peak>=5 || top3>=11) className='Épico';
+  else if(peak>=4 || top3>=8) className='Raro';
+  else if(peak>=3 || top3>=5) className='Incomum';
+  else className='Comum';
+  const rarity=RARITIES.find(r=>r.name===className)||RARITIES[0];
+  return {stats,tiers,rarity,profile:{peak,top3,extremes}};
 }
-function rarity(score){
-  if(score<15)return {stars:1,name:'COMUM',color:'#9b9b9b'};
-  if(score<30)return {stars:2,name:'INCOMUM',color:'#77d88a'};
-  if(score<45)return {stars:3,name:'RARO',color:'#6ea7ff'};
-  if(score<60)return {stars:4,name:'ÉPICO',color:'#ad7cff'};
-  if(score<73)return {stars:5,name:'LENDÁRIO',color:'#ffd15c'};
-  if(score<85)return {stars:6,name:'MÍTICO',color:'#ff7b68'};
-  if(score<95)return {stars:7,name:'DIVINO',color:'#ff4fc4'};
-  return {stars:8,name:'TRANSCENDENTE',color:'#75f5ff'};
-}
+const RARITIES=[
+ {name:'Comum',stars:1,color:'#8b8b8b'},
+ {name:'Incomum',stars:2,color:'#65d68a'},
+ {name:'Raro',stars:3,color:'#5aa8ff'},
+ {name:'Épico',stars:4,color:'#a777ff'},
+ {name:'Mítico',stars:5,color:'#ff5ac8'},
+ {name:'Lendário',stars:6,color:'#ffb84d'},
+ {name:'Divino',stars:7,color:'#fff36b'},
+ {name:'Transcendente',stars:8,color:'#72f5ff'}
+];
+
 function makeName(){
-  const a=RNG.pick(NAME_A),b=RNG.pick(NAME_B); return `${a}${b}`;
-}
-function makePersonality(p){
-  const alignment=RNG.pick(ALIGNMENTS);
-  const trait=RNG.pick(PERSONALITY_TRAITS);
-  const ideal=RNG.pick(IDEALS);
-  const flaw=RNG.pick(FLAWS);
-  const goal=RNG.pick(GOALS);
-  const fear=RNG.pick(FEARS);
-  return {alignment,trait,ideal,flaw,goal,fear};
-}
-function makeStory(p,personality){
-  const power=p.hasPower ? `O poder de ${String(p.power.name).toLowerCase()} se manifestou de forma ${String(p.power.detail).toLowerCase()}.` : 'Nenhum poder extraordinário despertou.';
-  return `${p.name} nasceu como ${String(p.race.name).toLowerCase()}, sob o título de ${String(p.title.name).toLowerCase()}. Aos ${String(p.age.name).toLowerCase()}, já carregava ${String(p.physical.name).toLowerCase()} força e resistência e se movia com ${String(p.speed.name).toLowerCase()} velocidade. Sua inteligência era ${String(p.intelligence.name).toLowerCase()} e seu domínio de combate, ${String(p.combat.name).toLowerCase()}. ${power} ${p.weapon.name!=='Nenhuma'?`Sua arma era ${p.weapon.name.toLowerCase()}.`:''} ${personality.trait} Seu objetivo é ${personality.goal.toLowerCase()}, mas ${personality.flaw.toLowerCase()}.`;
+  const a=RNG.pick(NAME_A),b=RNG.pick(NAME_B);
+  return a+b;
 }

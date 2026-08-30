@@ -1,98 +1,131 @@
-/* ROULETA DA VIDA V7 — interface e fluxo */
+/* ROULETA DA VIDA V8 — interface.
+   Um giro por vez. O wheel é visual; o sorteio é feito separadamente com RNG.
+   A interface usa delegação de eventos para não perder botões após re-render.
+*/
 const $=s=>document.querySelector(s);
-const esc=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const STEPS=[
- ['race','Qual sua raça?','races'],['title','Qual seu título?','titles'],['age','Qual sua idade?','ages'],
- ['physical','Força e resistência?','physical'],['speed','Velocidade?','speed'],['intelligence','Inteligência?','intelligence'],
- ['combat','Combate?','combat'],['hasPower','Possui poderes?','hasPower'],['power','Qual é o seu poder?','powerRefs'],['weapon','Arma?','weapons']
+ ['race','Qual sua raça?','races'],
+ ['title','Qual seu título?','titles'],
+ ['age','Qual sua idade?','ages'],
+ ['physical','Força e durabilidade?','physical'],
+ ['speed','Velocidade?','speed'],
+ ['intelligence','Inteligência?','intelligence'],
+ ['combat','Combate?','combat'],
+ ['hasPower','Possui poderes?','hasPower'],
+ ['power','Qual é o seu poder?','power'],
+ ['weapon','Arma?','weapons']
 ];
-let state={step:0,picks:[],hasPower:false,rotation:0,spinning:false,remoteReady:false};
-function activeSteps(){return state.hasPower?STEPS:STEPS.filter(x=>x[0]!=='power')}
-function pool(key){
- if(key==='powerRefs')return null;
- return LIBRARY[key]||[];
-}
-function label(item){return typeof item==='string'?item:item.name}
-function getItem(key){
- if(key==='powerRefs')return makePower();
- return draw(key);
-}
-function wheelTexture(){
- return 'repeating-conic-gradient(from 0deg,#050505 0deg 7deg,#111 7deg 13deg,#080808 13deg 18deg)';
+let state={step:0,picks:[],hasPower:false,rotation:0,spinning:false,spinToken:0};
+
+function activeSteps(){return state.hasPower?STEPS:STEPS.filter(s=>s[0]!=='power')}
+function currentStep(){return activeSteps()[state.step]}
+function visualWheel(canvas,highlight=-1){
+  if(!canvas)return;
+  const rect=canvas.getBoundingClientRect();
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  const size=Math.max(260,Math.floor(Math.min(rect.width||300,rect.height||300)));
+  if(canvas.width!==size*dpr){canvas.width=size*dpr;canvas.height=size*dpr;}
+  const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,size,size);
+  const cx=size/2,cy=size/2,r=size/2-2,n=60;
+  for(let i=0;i<n;i++){
+    const a=-Math.PI/2+i*(Math.PI*2/n),b=-Math.PI/2+(i+1)*(Math.PI*2/n);
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,a,b);ctx.closePath();
+    ctx.fillStyle=i===highlight?'#1b1b1b':(i%2?'#0b0b0b':'#111111');ctx.fill();
+    ctx.strokeStyle='#191919';ctx.lineWidth=1;ctx.stroke();
+  }
+  ctx.beginPath();ctx.arc(cx,cy,r-1,0,Math.PI*2);ctx.strokeStyle='#292929';ctx.lineWidth=1;ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,cy,r*.25,0,Math.PI*2);ctx.fillStyle='#000';ctx.fill();ctx.strokeStyle='#222';ctx.stroke();
 }
 function render(){
- const ss=activeSteps(),s=ss[state.step];
- const count=s[2]==='powerRefs'?'4,4 milhões de combinações':pool(s[2]).length+' opções';
- document.querySelector('#app').innerHTML=`
- <main class="wrap">
-  <header class="top"><span>ROULETA DA VIDA</span><span>V7</span></header>
-  <h1 class="title">Roleta da vida</h1>
-  <div class="step">${state.step+1}/${ss.length}</div>
-  <h2 class="question">${s[1]}</h2>
-  <section class="stage">
-   <div class="pointer"></div><div id="wheel" class="wheel" style="background:${wheelTexture()}"></div>
-   <button id="spin" class="center">GIRAR</button>
-  </section>
-  <div class="count">${count}</div>
-  <div id="result" class="result"></div>
-  <button id="next" class="next hidden">PRÓXIMO</button>
- </main>`;
- $('#spin').onclick=spin;
+  const ss=activeSteps();
+  if(state.step>=ss.length)state.step=ss.length-1;
+  const s=ss[state.step];
+  document.querySelector('#app').innerHTML=`
+   <main class="screen">
+    <header class="topbar"><span>ROULETA DA VIDA</span><span>V8</span></header>
+    <h1>Roleta da vida</h1>
+    <div class="progress">${state.step+1} / ${ss.length}</div>
+    <section class="roulette" aria-label="Roleta de sorteio">
+      <div class="pointer" aria-hidden="true"></div>
+      <canvas id="wheel" class="wheel"></canvas>
+      <button class="spin" data-action="spin" aria-label="Girar a roleta">GIRAR</button>
+    </section>
+    <h2>${esc(s[1])}</h2>
+    <div id="result" class="result" aria-live="polite">—</div>
+   </main>`;
+  visualWheel($('#wheel'));
 }
 function spin(){
- if(state.spinning)return;
- const ss=activeSteps(),s=ss[state.step];
- state.spinning=true;
- const value=getItem(s[2]);
- const list=pool(s[2]);
- const n=s[2]==='powerRefs'?(POWER_ACTIONS.length*POWER_DOMAINS.length*POWER_RANGES.length*POWER_MODIFIERS.length*POWER_FOCUSES.length):list.length;
- const idx=s[2]==='powerRefs'?(value.slot??RNG.int(n)):Math.max(0,list.findIndex(x=>label(x)===label(value)));
- const target=((idx+0.5)/n)*360;
- const current=((state.rotation%360)+360)%360;
- const turns=5+RNG.int(4);
- const delta=turns*360+(360-target)-current;
- state.rotation+=delta;
- const wheel=$('#wheel'),button=$('#spin'); button.disabled=true;button.textContent='…';
- wheel.style.transition='transform 4.7s cubic-bezier(.08,.8,.12,1)';
- requestAnimationFrame(()=>wheel.style.transform=`rotate(${state.rotation}deg)`);
- setTimeout(()=>{
-  state.picks.push({key:s[0],label:s[1],value});
-  if(s[0]==='hasPower')state.hasPower=label(value)==='Sim';
-  state.spinning=false;
-  $('#result').innerHTML=`<b>${esc(label(value))}</b><small>RESULTADO</small>`;
-  button.classList.add('hidden');
-  const next=$('#next');next.classList.remove('hidden');next.textContent=state.step===activeSteps().length-1?'CRIAR PERSONAGEM':'PRÓXIMO GIRO';next.onclick=nextStep;
- },4750);
+  if(state.spinning)return;
+  const s=currentStep();
+  if(!s)return;
+  const value=drawFor(s[2]);
+  const token=++state.spinToken;state.spinning=true;
+  const wheel=$('#wheel'),button=document.querySelector('[data-action="spin"]');
+  if(!wheel||!button){state.spinning=false;return;}
+  const visualSlot=RNG.int(60);
+  const current=((state.rotation%360)+360)%360;
+  const target=(visualSlot+0.5)*(360/60);
+  let delta=(360-target-current+360)%360;
+  delta+=360*(6+RNG.int(4));
+  state.rotation+=delta;
+  button.disabled=true;button.textContent='…';
+  wheel.style.transform=`rotate(${state.rotation}deg)`;
+  window.setTimeout(()=>{
+    if(token!==state.spinToken)return;
+    state.spinning=false;
+    state.picks.push({key:s[0],question:s[1],value});
+    if(s[0]==='hasPower')state.hasPower=label(value)==='Sim';
+    const result=$('#result');
+    if(result)result.innerHTML=`<strong>${esc(label(value))}</strong><span>resultado</span>`;
+    const next=document.createElement('button');
+    next.className='next';next.dataset.action='next';next.textContent=state.step===activeSteps().length-1?'CRIAR PERSONAGEM':'PRÓXIMO GIRO';
+    result?.after(next);
+  },4600);
 }
-function nextStep(){if(state.step>=activeSteps().length-1){finish();return}state.step++;render()}
+function next(){
+  if(state.spinning)return;
+  if(state.step>=activeSteps().length-1){finish();return}
+  state.step++;render();
+}
 function finish(){
- const m=Object.fromEntries(state.picks.map(x=>[x.key,x.value]));
- const p={...m,name:makeName(),hasPower:label(m.hasPower)==='Sim'};
- const personality=makePersonality(p);p.personality=personality;
- const {stats,score}=deriveStats(p);const rar=rarity(score);
- const reference=REMOTE_LIBRARY.characters.length?RNG.pick(REMOTE_LIBRARY.characters):null;
- p.reference=reference;
- const statHTML=Object.entries(stats).map(([k,v])=>`<div class="stat"><span>${k}</span><b>${v}</b><i><em style="width:${v}%"></em></i></div>`).join('');
- const rows=state.picks.map(x=>`<div class="row"><span>${esc(x.label)}</span><b>${esc(label(x.value))}</b></div>`).join('');
- const power=p.hasPower?`O poder despertou como ${label(p.power).toLowerCase()}, ${p.power.detail.toLowerCase()}.`:'Nenhum poder extraordinário despertou.';
- const story=`${p.name} nasceu como ${label(p.race).toLowerCase()} e recebeu o título de ${label(p.title).toLowerCase()}. Aos ${label(p.age).toLowerCase()}, tinha ${label(p.physical).toLowerCase()} força e resistência, ${label(p.speed).toLowerCase()} velocidade, uma mente ${label(p.intelligence).toLowerCase()} e ${label(p.combat).toLowerCase()} experiência de combate. ${power} ${p.weapon.name!=='Nenhuma'?`Sua arma era ${p.weapon.name.toLowerCase()}.`:''} ${personality.trait} Seu ideal é ${personality.ideal} Seu objetivo é ${personality.goal} Seu maior medo é ${personality.fear}`;
- document.querySelector('#app').innerHTML=`
- <main class="wrap final-page">
-  <header class="top"><span>ROULETA DA VIDA</span><span>V7</span></header>
-  <section class="final">
-   <div class="stars" style="color:${rar.color};text-shadow:0 0 ${5+rar.stars*4}px ${rar.color}">${'★'.repeat(rar.stars)}</div>
-   <div class="rarity" style="color:${rar.color}">${rar.name}</div>
-   <h1 style="text-shadow:0 0 ${rar.stars*2}px ${rar.color}">${esc(p.name)}</h1>
-   <div class="sub">${esc(label(p.race))} · ${esc(label(p.title))} · ${esc(label(p.age))}</div>
-   <div class="score" style="color:${rar.color}">${score}/100</div>
-  </section>
-  <section class="stats">${statHTML}</section>
-  <section class="sheet"><h2>FICHA</h2>${rows}</section>
-  <section class="story"><p>${esc(story)}</p><p class="personality"><b>${esc(personality.alignment)}</b> · ${esc(personality.flaw)}</p>${reference?`<p class="source">matriz externa: ${esc(reference.name)}</p>`:''}</section>
-  <button id="again" class="again">NOVO PERSONAGEM</button>
- </main>`;
- $('#again').onclick=()=>{state={step:0,picks:[],hasPower:false,rotation:0,spinning:false,remoteReady:state.remoteReady};render()};
+  const picked=Object.fromEntries(state.picks.map(x=>[x.key,x.value]));
+  const p={...picked,name:makeName(),hasPower:label(picked.hasPower)==='Sim'};
+  if(!p.hasPower)delete p.power;
+  const personality=makePersonality();
+  const profile=deriveStats(p);
+  const story=makeStory(p,personality);
+  const rar=profile.rarity;
+  const statHTML=Object.entries(profile.stats).map(([k,v])=>`<div class="stat"><span>${esc(k)}</span><b>${v}</b><i><em style="width:${v}%"></em></i></div>`).join('');
+  const refs=state.picks.map(x=>{const v=normalizeItem(x.value);return v.ref?`<div class="reference"><span>${esc(x.question)}</span><b>${esc(v.ref)}</b></div>`:''}).join('');
+  document.querySelector('#app').innerHTML=`
+   <main class="screen final-screen" style="--rarity:${rar.color}">
+    <header class="topbar"><span>ROULETA DA VIDA</span><span>V8</span></header>
+    <section class="reveal">
+      <div class="stars" aria-label="${rar.stars} estrelas">${'★'.repeat(rar.stars)}</div>
+      <div class="rarity">${rar.name}</div>
+      <h1>${esc(p.name)}</h1>
+      <p>${esc(label(p.race))} · ${esc(label(p.title))}</p>
+    </section>
+    <section class="stats">${statHTML}</section>
+    <section class="story"><h2>O QUE O LEVOU ATÉ AQUI</h2>${story.map(x=>`<p>${esc(x)}</p>`).join('')}</section>
+    <section class="references"><h2>REFERÊNCIAS</h2>${refs||'<p>Conceitos combinados a partir da biblioteca local.</p>'}</section>
+    <button class="again" data-action="new">NOVO PERSONAGEM</button>
+   </main>`;
 }
-window.addEventListener('referencepoolready',()=>{state.remoteReady=true});
+function newCharacter(){
+  state={step:0,picks:[],hasPower:false,rotation:0,spinning:false,spinToken:state.spinToken+1};
+  render();window.scrollTo({top:0,behavior:'instant'});
+}
+document.addEventListener('click',e=>{
+  const action=e.target.closest('[data-action]')?.dataset.action;
+  if(action==='spin')spin();
+  else if(action==='next')next();
+  else if(action==='new')newCharacter();
+});
+let resizeTimer;
+window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>visualWheel($('#wheel')),80)});
+window.addEventListener('pageshow',()=>{if(!state.spinning)render()});
 render();
-hydrateReferencePool();
+if(typeof hydrateReferencePool==='function')hydrateReferencePool();
