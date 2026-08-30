@@ -428,69 +428,110 @@ function spin(){
   },4200);
 }
 
+
+function portraitSVG(p, rarity){
+  const hue = ["#777","#65d391","#5ca9ff","#a777ff","#ef67d5","#ffad42","#fff05a","#5be9ff","#ffffff"][rarity.stars-1];
+  const name=esc(p.name?.name||"Personagem");
+  const race=esc(p.race?.name||"Raça desconhecida");
+  const power=esc(p.power?.name||"Sem poder");
+  const hair=["#161616","#f2f2f2","#8c6a4a","#b83b3b","#315fbd","#8d3ca8","#d5c36a","#5e9d75"][RV.randomInt(8)];
+  const eye=["#e8e8e8","#c94c4c","#4ca7d8","#d9a52e","#7d55c7","#63d18a"][RV.randomInt(6)];
+  const glow=rarity.stars>=7 ? `filter="url(#g)"` : "";
+  return `<svg class="portrait-svg" viewBox="0 0 600 760" role="img" aria-label="${name}">
+    <defs>
+      <radialGradient id="bg"><stop offset="0" stop-color="${hue}" stop-opacity=".34"/><stop offset=".55" stop-color="#111" stop-opacity=".55"/><stop offset="1" stop-color="#000"/></radialGradient>
+      <filter id="g"><feGaussianBlur stdDeviation="9" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <linearGradient id="coat" x1="0" x2="1"><stop stop-color="#111"/><stop offset=".5" stop-color="${hue}" stop-opacity=".55"/><stop offset="1" stop-color="#050505"/></linearGradient>
+    </defs>
+    <rect width="600" height="760" fill="#030303"/>
+    <rect width="600" height="760" fill="url(#bg)"/>
+    <g opacity=".35">${Array.from({length:18},(_,i)=>`<circle cx="${40+(i*83)%520}" cy="${60+(i*137)%640}" r="${1+(i%3)}" fill="${hue}"/>`).join("")}</g>
+    <ellipse cx="300" cy="675" rx="225" ry="75" fill="#000" opacity=".8"/>
+    <path d="M105 720 Q130 535 215 490 L385 490 Q470 535 495 720Z" fill="url(#coat)" stroke="${hue}" stroke-opacity=".5" stroke-width="3"/>
+    <path d="M235 488 L300 560 L365 488" fill="#070707" stroke="${hue}" stroke-opacity=".45" stroke-width="2"/>
+    <ellipse cx="300" cy="350" rx="125" ry="155" fill="#b88468" stroke="${hue}" stroke-opacity=".65" stroke-width="4" ${glow}/>
+    <path d="M175 315 Q170 145 300 130 Q430 145 425 315 Q395 245 350 210 Q290 270 190 245Z" fill="${hair}" stroke="${hue}" stroke-opacity=".6" stroke-width="5"/>
+    <ellipse cx="253" cy="350" rx="17" ry="12" fill="${eye}" ${rarity.stars>=7?'filter="url(#g)"':''}/>
+    <ellipse cx="347" cy="350" rx="17" ry="12" fill="${eye}" ${rarity.stars>=7?'filter="url(#g)"':''}/>
+    <path d="M255 430 Q300 450 345 430" fill="none" stroke="#522f2f" stroke-width="7" stroke-linecap="round"/>
+    ${p.hasPower?.name==="Sim"?`<path d="M95 575 Q170 505 210 545 Q155 605 100 645 M505 575 Q430 505 390 545 Q445 605 500 645" fill="none" stroke="${hue}" stroke-width="${rarity.stars>=7?10:5}" opacity=".8"/>`:""}
+    <text x="300" y="55" text-anchor="middle" fill="${hue}" font-size="12" font-family="sans-serif" font-weight="900" letter-spacing="4">${race.toUpperCase()}</text>
+    <text x="300" y="710" text-anchor="middle" fill="#fff" font-size="16" font-family="sans-serif" font-weight="900">${name}</text>
+    <text x="300" y="735" text-anchor="middle" fill="#777" font-size="9" font-family="sans-serif">${power}</text>
+  </svg>`;
+}
+
+function cardShell(p, rarity, story){
+  const refs=[
+    ["Raça",p.race],["Poder",p.power],["Arma / equipamento",p.weapons]
+  ].filter(([,x])=>refFor(x));
+  const stat=(label,x)=>`<div class="stat"><span>${esc(label)}</span><b>${esc(x?.name||"—")}</b></div>`;
+  return `
+  <main class="screen final visual-final" style="--rarity:${esc(rarity.color)}">
+    <header><span>ROULETA DA VIDA</span><span>V10</span></header>
+    <section class="collector-card" id="collectorCard" data-stars="${rarity.stars}">
+      <div class="holo"></div>
+      <div class="card-art">${portraitSVG(p,rarity)}</div>
+      <div class="card-content">
+        <div class="card-top"><div class="stars">${rarityStars(rarity.stars)}</div><div class="rarity-name">${esc(rarity.name)}</div></div>
+        <div class="name">${esc(p.name.name)}</div>
+        <div class="sub">${esc(p.race.name)} · ${esc(p.title.name)} · ${esc(p.age.name)}</div>
+        <div class="card-badge">${rarity.stars}/9</div>
+      </div>
+    </section>
+    <div class="card-actions">
+      <button id="tiltHelp" class="next" type="button">INTERAGIR COM CARD</button>
+      <button id="showDetails" class="next" type="button">ABRIR FICHA</button>
+    </div>
+    <section id="details" class="details-panel" hidden>
+      <section class="stats">
+        ${stat("RAÇA",p.race)}${stat("TÍTULO",p.title)}
+        ${stat("APARÊNCIA",p.appearance)}${stat("CONDIÇÃO",p.condition)}
+        ${stat("FORÇA",p.force)}${stat("VELOCIDADE",p.speed)}
+        ${stat("INTELIGÊNCIA",p.intelligence)}${stat("COMBATE",p.combat)}
+        ${stat("TALENTO",p.talent)}${stat("PODER",p.hasPower?p.power:{name:"Nenhum"})}
+        ${stat("DOMÍNIO",p.hasPower?p.control:{name:"Não se aplica"})}${stat("ARMA / EQUIPAMENTO",p.weapons)}
+        ${stat("TIPO DE VIDA",p.life)}
+      </section>
+      ${refs.length?`<section class="refs"><h3>DE ONDE VIERAM AS REFERÊNCIAS</h3>${refs.map(([l,x])=>`<p><b>${esc(l)}:</b> ${esc(x.name)}<br><span>${esc(refFor(x))}</span></p>`).join("")}</section>`:""}
+      <section class="story"><h3>ORIGEM DO PERSONAGEM</h3>${story.map(x=>x.startsWith("### ")?`<h4>${esc(x.slice(4))}</h4>`:`<p>${esc(x)}</p>`).join("")}</section>
+    </section>
+    <button id="newCharacter" class="again" type="button">NOVO PERSONAGEM</button>
+  </main>`;
+}
+
 function reveal(){
   if(state.spinning)return;
   const p={...state.picks};
   p.hasPower=p.hasPower?.name==="Sim";
-
-  if(!p.name)p.name={name:RV.name()};
-  if(!p.race)p.race={name:"Humano",rank:1};
-  if(!p.title)p.title={name:"Ninguém"};
-  if(!p.age)p.age={name:"18 anos"};
-  if(!p.appearance)p.appearance={name:"aparência comum"};
-  if(!p.condition)p.condition={name:"condição comum"};
-  if(!p.force)p.force={name:"fisicamente comum",value:1};
-  if(!p.speed)p.speed={name:"velocidade comum",value:1};
-  if(!p.intelligence)p.intelligence={name:"comum",value:1};
-  if(!p.combat)p.combat={name:"sem experiência",value:1};
-  if(!p.talent)p.talent={name:"nenhum talento excepcional",value:0};
-  if(!p.weapons)p.weapons={name:"Nenhuma",value:0};
-  if(!p.life)p.life={name:"Comum",value:0};
+  const defaults={
+    name:["Pessoa sem nome",0],race:["Humano",10],title:["Ninguém",5],age:["18 anos",50],
+    appearance:["aparência comum",50],condition:["condição comum",50],
+    force:["força comum",50],speed:["velocidade comum",50],intelligence:["inteligência comum",50],
+    combat:["sem experiência",20],talent:["nenhum talento excepcional",10],
+    weapons:["Nenhuma",10],life:["Comum",30]
+  };
+  for(const [k,[n,v]] of Object.entries(defaults)) if(!p[k])p[k]={name:n,value:v};
   if(!p.hasPower){delete p.power;delete p.control}
-  else {
-    if(!p.power)p.power={name:"Poder desconhecido",value:50};
-    if(!p.control)p.control={name:"controle básico",value:30};
-  }
-
+  else {if(!p.power)p.power={name:"Poder desconhecido",value:50};if(!p.control)p.control={name:"controle básico",value:30}}
   const rarity=calculateRarity(p);
   document.body.className=`rarity-${rarity.stars}`;
-
   const story=buildOrigin(p);
-  const refs=[
-    ["Raça",p.race],["Poder",p.power],["Arma / equipamento",p.weapons]
-  ].filter(([,x])=>refFor(x));
-
-  const stat=(label,x)=>`<div class="stat"><span>${esc(label)}</span><b>${esc(x?.name||"—")}</b></div>`;
-
-  app.innerHTML=`
-  <main class="screen final" style="--rarity:${esc(rarity.color)}">
-    <header><span>ROULETA DA VIDA</span><span>V9</span></header>
-    <section class="card">
-      <div class="card-top">
-        <div class="stars">${rarityStars(rarity.stars)}</div>
-        <div class="rarity-name">${esc(rarity.name)}</div>
-      </div>
-      <div class="name">${esc(p.name.name)}</div>
-      <div class="sub">${esc(p.race.name)} · ${esc(p.title.name)} · ${esc(p.age.name)}</div>
-      <div class="card-badge">${rarity.stars}/9</div>
-    </section>
-
-    <section class="stats">
-      ${stat("RAÇA",p.race)}${stat("TÍTULO",p.title)}
-      ${stat("APARÊNCIA",p.appearance)}${stat("CONDIÇÃO",p.condition)}
-      ${stat("FORÇA",p.force)}${stat("VELOCIDADE",p.speed)}
-      ${stat("INTELIGÊNCIA",p.intelligence)}${stat("COMBATE",p.combat)}
-      ${stat("TALENTO",p.talent)}${stat("PODER",p.hasPower?p.power:{name:"Nenhum"})}
-      ${stat("DOMÍNIO",p.hasPower?p.control:{name:"Não se aplica"})}${stat("ARMA / EQUIPAMENTO",p.weapons)}
-      ${stat("TIPO DE VIDA",p.life)}
-    </section>
-
-    ${refs.length?`<section class="refs"><h3>DE ONDE VIERAM AS REFERÊNCIAS</h3>${refs.map(([l,x])=>`<p><b>${esc(l)}:</b> ${esc(x.name)}<br><span>${esc(refFor(x))}</span></p>`).join("")}</section>`:""}
-
-    <section class="story"><h3>ORIGEM DO PERSONAGEM</h3>${story.map(x=>x.startsWith("### ")?`<h4>${esc(x.slice(4))}</h4>`:`<p>${esc(x)}</p>`).join("")}</section>
-
-    <button id="newCharacter" class="again" type="button">NOVO PERSONAGEM</button>
-  </main>`;
+  app.innerHTML=cardShell(p,rarity,story);
+  requestAnimationFrame(()=>{
+    const card=document.getElementById("collectorCard");
+    if(!card)return;
+    const stars=rarity.stars;
+    card.classList.add(`collector-${stars}`);
+    let raf=0;
+    const move=(clientX,clientY)=>{
+      const r=card.getBoundingClientRect(),x=(clientX-r.left)/r.width-.5,y=(clientY-r.top)/r.height-.5;
+      cancelAnimationFrame(raf);
+      raf=requestAnimationFrame(()=>{card.style.setProperty("--rx",`${-y*8}deg`);card.style.setProperty("--ry",`${x*10}deg`);card.style.setProperty("--mx",`${(x+.5)*100}%`);card.style.setProperty("--my",`${(y+.5)*100}%`)});
+    };
+    card.addEventListener("pointermove",e=>move(e.clientX,e.clientY),{passive:true});
+    card.addEventListener("pointerleave",()=>{card.style.setProperty("--rx","0deg");card.style.setProperty("--ry","0deg");card.style.setProperty("--mx","50%");card.style.setProperty("--my","50%")},{passive:true});
+  });
 }
 
 document.addEventListener("click",e=>{
@@ -500,6 +541,18 @@ document.addEventListener("click",e=>{
     e.preventDefault();
     if(b.dataset.action==="reveal")reveal();
     else {state.index++;render()}
+    return;
+  }
+  if(b.id==="showDetails"){
+    e.preventDefault();
+    const d=document.getElementById("details");
+    if(d){d.hidden=!d.hidden;b.textContent=d.hidden?"ABRIR FICHA":"FECHAR FICHA";d.scrollIntoView({behavior:"smooth",block:"start"});}
+    return;
+  }
+  if(b.id==="tiltHelp"){
+    e.preventDefault();
+    const c=document.getElementById("collectorCard");
+    if(c){c.classList.add("card-pulse");setTimeout(()=>c.classList.remove("card-pulse"),900);}
     return;
   }
   if(b.id==="newCharacter"){

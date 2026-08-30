@@ -56,3 +56,34 @@ header{width:100%;display:flex;justify-content:space-between;color:#303030;font-
 @media(max-width:430px){.screen{padding-left:13px;padding-right:13px}.wheelbox{width:min(92vw,440px);height:min(92vw,440px)}.stats{gap:10px 12px}.name{font-size:clamp(36px,12vw,60px)}.card{padding-left:15px;padding-right:15px}}
 @media(max-height:700px) and (max-width:430px){.title{margin-top:20px}.wheelbox{margin-top:15px}.screen h2{margin-top:15px}.card{margin-top:30px}}
 @media(prefers-reduced-motion:reduce){#wheel{transition:none}.rarity-8 .stars,.rarity-9 .stars{animation:none}.card{animation:none!important}}
+
+/* V10 — collectible card */
+.visual-final{padding-bottom:45px}
+.collector-card{position:relative;width:min(94vw,430px);aspect-ratio:2/2.82;margin-top:clamp(28px,7vh,70px);border-radius:24px;overflow:hidden;background:#050505;border:2px solid color-mix(in srgb,var(--rarity),#111 48%);box-shadow:0 20px 80px color-mix(in srgb,var(--rarity),transparent 70%),0 0 20px color-mix(in srgb,var(--rarity),transparent 85%);transform:perspective(1000px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .16s ease,box-shadow .3s ease;isolation:isolate;touch-action:pan-y}
+.collector-card .holo{position:absolute;inset:-40%;z-index:3;pointer-events:none;background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,.28),transparent 16%),linear-gradient(115deg,transparent 28%,color-mix(in srgb,var(--rarity),transparent 72%) 42%,rgba(255,255,255,.2) 50%,transparent 58%);mix-blend-mode:screen;opacity:.12;transition:opacity .2s}
+.collector-card:hover .holo{opacity:.8}
+.card-art{position:absolute;inset:0 0 25%;overflow:hidden;background:#020202}
+.card-art:after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,transparent 45%,#050505 100%);pointer-events:none}
+.portrait-svg{display:block;width:100%;height:100%}
+.card-content{position:absolute;z-index:4;left:0;right:0;bottom:0;padding:20px 20px 24px;background:linear-gradient(to bottom,transparent,#050505 12%,#050505 100%)}
+.collector-card .stars{font-size:clamp(18px,5vw,28px);letter-spacing:2px}
+.collector-card .name{font-size:clamp(30px,8vw,48px);margin-top:8px;text-shadow:0 0 20px var(--rarity)}
+.collector-card .sub{font-size:9px}
+.card-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:18px}
+.details-panel{width:100%}
+.collector-1{filter:saturate(.25);box-shadow:none}
+.collector-2{filter:saturate(.55)}
+.collector-3{box-shadow:0 18px 55px color-mix(in srgb,var(--rarity),transparent 80%)}
+.collector-4,.collector-5{box-shadow:0 18px 70px color-mix(in srgb,var(--rarity),transparent 70%)}
+.collector-6,.collector-7{box-shadow:0 20px 90px color-mix(in srgb,var(--rarity),transparent 55%)}
+.collector-8,.collector-9{box-shadow:0 22px 110px color-mix(in srgb,var(--rarity),transparent 38%),inset 0 0 50px color-mix(in srgb,var(--rarity),transparent 80%)}
+.collector-8 .holo,.collector-9 .holo{opacity:.85;animation:holoMove 4s linear infinite}
+.collector-9{border-color:#fff;animation:cardEntrance 1s cubic-bezier(.2,.8,.2,1) both}
+.collector-9 .card-art:before{content:"";position:absolute;inset:0;z-index:2;background:linear-gradient(120deg,transparent 15%,rgba(255,255,255,.18) 28%,transparent 42%,rgba(255,255,255,.16) 58%,transparent 72%);background-size:220% 100%;animation:prism 3s linear infinite;mix-blend-mode:screen}
+.card-pulse{animation:cardPulse .9s ease}
+@keyframes prism{to{background-position:-220% 0}}
+@keyframes holoMove{0%{transform:translate(-15%,-10%) rotate(0deg)}50%{transform:translate(15%,10%) rotate(8deg)}100%{transform:translate(-15%,-10%) rotate(0deg)}}
+@keyframes cardEntrance{from{opacity:0;transform:perspective(1000px) scale(.8) rotateX(8deg)}60%{opacity:1;transform:perspective(1000px) scale(1.03) rotateX(-2deg)}to{transform:perspective(1000px) scale(1)}}
+@keyframes cardPulse{50%{transform:perspective(1000px) rotateX(-4deg) rotateY(7deg) scale(1.025);box-shadow:0 0 120px color-mix(in srgb,var(--rarity),transparent 35%)}}
+@media(max-width:430px){.collector-card{width:min(94vw,380px);border-radius:20px}.card-content{padding:15px 15px 18px}.card-actions .next{padding:11px 16px;font-size:8px}}
+@media(prefers-reduced-motion:reduce){.collector-card,.collector-9,.collector-8 .holo,.collector-9 .card-art:before{animation:none!important;transition:none!important}}
