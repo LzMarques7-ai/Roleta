@@ -23,33 +23,18 @@ const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
 function active(){return steps.filter(x=>x[0]!=="power"||S.p.hasPower?.name==="Sim")}
 
 function list(k){
-const m={race:"races",title:"titles",age:"ages",speed:"speed",intelligence:"intelligence",combat:"combat",weapons:"weapons"};
-if(m[k]&&Array.isArray(window.LIBRARY?.[m[k]])&&LIBRARY[m[k]].length)return LIBRARY[m[k]];
-return Array.isArray(window.RV?.fallback?.[k])?RV.fallback[k]:[];
+  return [];
 }
 
 function pick(k){
-if(k==="race")return RV.race();
-if(k==="name")return {name:RV.name()};
-if(k==="hasPower")return {name:RV.yesPower()?"Sim":"Não"};
-if(k==="power")return RV.power();
+  if(k==="race") return RV.race();
+  if(k==="name") return {name:RV.name()};
+  if(k==="hasPower") return {name:RV.yesPower()?"Sim":"Não"};
+  if(k==="power") return RV.power();
 
-// Algumas categorias da biblioteca usam nomes diferentes no engine.
-// Nunca deixe essas categorias caírem em "Indefinido".
-const aliases={
-condition:"condition", force:"force", talent:"talent", control:"control",
-potential:"potential", life:"life", appearance:"appearance"
-};
-const source=aliases[k]||k;
-if(k==="force" && Array.isArray(RV.fallback?.physical)) return RV.norm(RV.fallback.physical[RV.randomInt(RV.fallback.physical.length)]);
-const a=list(source);
-if(a.length)return RV.norm(a[RV.randomInt(a.length)]);
-
-// Biblioteca principal (library.js) — tentativa direta antes do fallback.
-const direct=source==="races"?LIBRARY?.races:LIBRARY?.[source];
-if(Array.isArray(direct)&&direct.length)return RV.norm(direct[RV.randomInt(direct.length)]);
-
-return {name:"Resultado indisponível"};
+  /* RV.draw() é a função pública do engine V8 que sorteia
+     todas as categorias do fallback interno. */
+  return RV.draw(k);
 }
 
 function draw(){
