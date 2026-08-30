@@ -32,11 +32,26 @@ function pick(k){
   if(k==="hasPower") return {name:RV.yesPower()?"Sim":"Não"};
   if(k==="power") return RV.power();
 
-  /* RV.draw() é a função pública do engine V8 que sorteia
-     todas as categorias do fallback interno. */
-  return RV.draw(k);
-}
+  const libraryKey = {
+    title:"titles",
+    age:"ages",
+    speed:"speed",
+    intelligence:"intelligence",
+    combat:"combat",
+    weapons:"weapons"
+  }[k];
 
+  if(libraryKey && window.LIBRARY && Array.isArray(LIBRARY[libraryKey]) && LIBRARY[libraryKey].length){
+    return RV.norm(LIBRARY[libraryKey][RV.randomInt(LIBRARY[libraryKey].length)]);
+  }
+
+  if(typeof RV.draw==="function"){
+    const value=RV.draw(k);
+    if(value) return RV.norm(value);
+  }
+
+  return {name:"—"};
+}
 function draw(){
 const c=document.getElementById("wheel");if(!c)return;
 const b=c.parentElement,size=Math.max(220,Math.floor(Math.min(b.clientWidth,b.clientHeight))),d=Math.min(devicePixelRatio||1,2);
