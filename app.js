@@ -33,8 +33,23 @@ if(k==="race")return RV.race();
 if(k==="name")return {name:RV.name()};
 if(k==="hasPower")return {name:RV.yesPower()?"Sim":"Não"};
 if(k==="power")return RV.power();
-const a=list(k);
-return RV.norm(a.length?a[RV.randomInt(a.length)]:{name:"Indefinido"});
+
+// Algumas categorias da biblioteca usam nomes diferentes no engine.
+// Nunca deixe essas categorias caírem em "Indefinido".
+const aliases={
+condition:"condition", force:"force", talent:"talent", control:"control",
+potential:"potential", life:"life", appearance:"appearance"
+};
+const source=aliases[k]||k;
+if(k==="force" && Array.isArray(RV.fallback?.physical)) return RV.norm(RV.fallback.physical[RV.randomInt(RV.fallback.physical.length)]);
+const a=list(source);
+if(a.length)return RV.norm(a[RV.randomInt(a.length)]);
+
+// Biblioteca principal (library.js) — tentativa direta antes do fallback.
+const direct=source==="races"?LIBRARY?.races:LIBRARY?.[source];
+if(Array.isArray(direct)&&direct.length)return RV.norm(direct[RV.randomInt(direct.length)]);
+
+return {name:"Resultado indisponível"};
 }
 
 function draw(){
