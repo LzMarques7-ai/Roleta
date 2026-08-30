@@ -1,601 +1,76 @@
-<!doctype html>
-<html lang="pt-BR">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#08090d">
-<title>Character Roulette</title>
-<style>
-*{box-sizing:border-box}
-html,body{margin:0;max-width:100%;overflow-x:hidden}
-body{background:#08090d;color:#f4f5f8;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
-button{font:inherit}
-.app{width:100%;max-width:760px;margin:auto;padding:16px 14px 60px}
-.header{display:flex;justify-content:space-between;align-items:center;gap:10px}
-.logo{font-size:12px;font-weight:900;letter-spacing:.16em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ver{font-size:10px;color:#9b7cff;border:1px solid #39304e;border-radius:99px;padding:5px 8px}
-.hero{text-align:center;padding:30px 5px 22px}
-.hero h1{font-size:36px;line-height:1;margin:0 0 9px;letter-spacing:-.05em}
-.hero p{margin:0;color:#8f94a1;font-size:14px;line-height:1.45}
-.card{background:linear-gradient(145deg,#14161e,#0f1016);border:1px solid #292d38;border-radius:20px;padding:16px;margin:11px 0;box-shadow:0 18px 50px #0005}
-.kicker{font-size:10px;color:#888e9c;letter-spacing:.16em;text-transform:uppercase;margin-bottom:12px}
-.progress{height:7px;background:#242733;border-radius:20px;overflow:hidden;margin:4px 0 16px}
-.progress>div{height:100%;width:0;background:linear-gradient(90deg,#9b7cff,#5de1ff);transition:width .45s}
-.stage{text-align:center;padding:13px 5px 16px}
-.stage .number{font-size:10px;color:#8c91a0;letter-spacing:.14em;text-transform:uppercase}
-.stage h2{font-size:25px;margin:8px 0 5px}
-.stage .hint{font-size:12px;color:#777d8b}
-.roulette{position:relative;margin:10px auto 15px;width:min(430px,100%);height:132px;border:1px solid #333745;border-radius:18px;background:#0b0d13;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.roulette:before,.roulette:after{content:"";position:absolute;top:0;bottom:0;width:25%;z-index:2;pointer-events:none}
-.roulette:before{left:0;background:linear-gradient(90deg,#0b0d13,transparent)}
-.roulette:after{right:0;background:linear-gradient(-90deg,#0b0d13,transparent)}
-.pointer{position:absolute;top:7px;z-index:4;font-size:13px;color:#9b7cff}
-.spin-value{font-size:25px;font-weight:950;letter-spacing:-.03em;z-index:3;padding:0 30px;text-align:center}
-.spin-sub{position:absolute;bottom:10px;color:#727887;font-size:10px;z-index:3}
-.spin-btn{width:100%;border:0;border-radius:16px;padding:17px;background:linear-gradient(90deg,#9b7cff,#718fff);color:#08090d;font-weight:950;font-size:17px;cursor:pointer}
-.spin-btn:disabled{opacity:.55;cursor:default}
-.next-btn{width:100%;margin-top:8px;border:1px solid #333744;border-radius:15px;padding:14px;background:#161821;color:#fff;font-weight:850;cursor:pointer}
-.effect{margin-top:13px;padding:11px;border:1px solid #2b3040;border-radius:13px;background:#10121a}
-.effect strong{font-size:11px}.mods{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.mod{font-size:10px;padding:6px 8px;border-radius:99px;background:#1c202b;color:#cfd3dd}
-.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
-.tab{padding:10px 5px;text-align:center;border:1px solid #292d38;border-radius:11px;background:#10121a;color:#9297a4;font-size:11px}
-.tab.on{color:#fff;border-color:#5b4a91}
-.hidden{display:none!important}
-.result-title{font-size:32px;font-weight:950;letter-spacing:-.05em}
-.result-sub{color:#5de1ff;font-size:13px;margin-top:3px}
-.rarity{color:#ffd76a;margin-top:10px;font-size:13px}
-.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}.tag{font-size:10px;padding:7px 9px;border-radius:99px;background:#1b1e27;border:1px solid #303542}
-.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.stat{background:#0c0e14;border:1px solid #222631;border-radius:12px;padding:10px}
-.stat-top{display:flex;justify-content:space-between;font-size:11px}.bar{height:6px;background:#282c36;border-radius:10px;margin-top:7px;overflow:hidden}.fill{height:100%;background:linear-gradient(90deg,#9b7cff,#5de1ff)}
-.rows{display:grid;gap:7px}.row{display:flex;justify-content:space-between;gap:12px;padding:10px;border-radius:11px;background:#0c0e14;border:1px solid #222631;font-size:12px}.row span{color:#8e94a1}.row b{text-align:right}
-.text{font-size:13px;line-height:1.62;color:#d8dbe2}.text b{color:#fff}
-.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.actions button{border:1px solid #303440;border-radius:12px;background:#14161e;color:#fff;padding:11px;cursor:pointer}
-.save{padding:10px 0;border-bottom:1px solid #292d38;cursor:pointer}.save:last-child{border:0}.save b{font-size:12px}.save small{display:block;color:#858b98;font-size:10px;margin-top:3px}
-.empty{font-size:11px;color:#7e8491}
-@keyframes wobble{0%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(3px)}100%{transform:translateX(0)}}
-.spinning{animation:wobble .12s linear infinite}
-@media(max-width:430px){.hero h1{font-size:31px}.stats{grid-template-columns:1fr}}
-</style>
-</head>
-<body>
-<main class="app">
-<header class="header"><div class="logo">CHARACTER // ROULETTE</div><div class="ver">V2.0</div></header>
-
-<section class="hero">
-<h1>Construa um personagem.</h1>
-<p>Uma roleta por vez. Cada resultado altera a ficha.</p>
-</section>
-
-<section id="game" class="card">
-<div class="kicker">Progresso</div>
-<div class="progress"><div id="progress"></div></div>
-
-<div class="stage">
-<div class="number" id="roundNumber"></div>
-<h2 id="roundTitle"></h2>
-<div class="hint" id="roundHint"></div>
-
-<div class="roulette" id="roulette">
-<div class="pointer">▼</div>
-<div class="spin-value" id="spinValue">?</div>
-<div class="spin-sub" id="spinSub">TOQUE PARA GIRAR</div>
-</div>
-
-<button class="spin-btn" id="spinBtn">🎰 GIRAR</button>
-<button class="next-btn hidden" id="nextBtn">PRÓXIMA ROLAGEM →</button>
-<div class="effect hidden" id="effect"></div>
-</div>
-
-<div class="tabs" id="miniTabs"></div>
-</section>
-
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#08090d"><title>Character Roulette V3</title><style>
+*{box-sizing:border-box}html,body{margin:0;max-width:100%;overflow-x:hidden}body{background:#08090d;color:#f5f6f8;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.app{max-width:760px;margin:auto;padding:16px 14px 60px}.head{display:flex;justify-content:space-between;font-weight:900;font-size:12px;letter-spacing:.12em}.ver{color:#a789ff;border:1px solid #403657;border-radius:99px;padding:5px 8px;font-size:10px}.hero{text-align:center;padding:28px 4px 20px}.hero h1{font-size:32px;margin:0 0 8px;letter-spacing:-.05em}.hero p{margin:0;color:#9298a6;font-size:14px}.card{background:linear-gradient(145deg,#15171f,#0f1016);border:1px solid #292d38;border-radius:20px;padding:16px;margin:11px 0;box-shadow:0 16px 45px #0005}.kick{font-size:10px;color:#888e9c;letter-spacing:.16em;text-transform:uppercase;margin-bottom:12px}.progress{height:7px;background:#252832;border-radius:9px;overflow:hidden}.progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,#9b7cff,#5de1ff);transition:.35s}.stage{text-align:center;padding-top:14px}.num{font-size:10px;color:#858b99;letter-spacing:.15em}.stage h2{font-size:24px;margin:7px 0 4px}.hint{color:#777d8b;font-size:12px}.roulette{height:145px;margin:14px 0;border:1px solid #353946;border-radius:18px;background:#0b0d13;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}.roulette:before,.roulette:after{content:"";position:absolute;inset:0;width:24%;z-index:2}.roulette:before{background:linear-gradient(90deg,#0b0d13,transparent)}.roulette:after{left:auto;right:0;background:linear-gradient(-90deg,#0b0d13,transparent)}.pointer{position:absolute;top:7px;color:#a789ff;z-index:4}.value{font-size:24px;font-weight:950;text-align:center;padding:0 28px;z-index:3}.sub{position:absolute;bottom:9px;color:#727887;font-size:10px;z-index:3}.spin{width:100%;border:0;border-radius:16px;padding:17px;background:linear-gradient(90deg,#9b7cff,#718fff);font-weight:950;font-size:17px;cursor:pointer}.spin:disabled{opacity:.55}.next{width:100%;margin-top:8px;padding:14px;border-radius:15px;border:1px solid #343844;background:#161821;color:white;font-weight:850}.effect{margin-top:12px;padding:11px;border:1px solid #2d3240;border-radius:13px;background:#10121a;font-size:11px}.mods{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.mod,.tag{background:#1b1f29;border:1px solid #303542;border-radius:99px;padding:6px 8px;font-size:10px}.tabs{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;margin-top:13px}.tab{height:24px;display:flex;align-items:center;justify-content:center;border:1px solid #292d38;border-radius:7px;color:#656b78;font-size:9px}.tab.on{color:white;border-color:#5b4a91;background:#181522}.hidden{display:none!important}.resultTitle{font-size:32px;font-weight:950;letter-spacing:-.05em}.cyan{color:#5de1ff;font-size:13px;margin-top:3px}.rarity{color:#ffd76a;margin-top:9px}.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}.stat{padding:10px;background:#0c0e14;border:1px solid #222631;border-radius:12px}.statTop{display:flex;justify-content:space-between;font-size:11px}.bar{height:6px;background:#282c36;border-radius:8px;margin-top:7px;overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,#9b7cff,#5de1ff)}.rows{display:grid;gap:7px}.row{display:flex;justify-content:space-between;gap:12px;padding:10px;background:#0c0e14;border:1px solid #222631;border-radius:11px;font-size:12px}.row span{color:#8d93a0}.text{font-size:13px;line-height:1.62;color:#d8dbe2}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.actions button{padding:11px;border-radius:12px;border:1px solid #303440;background:#14161e;color:white}.save{padding:10px 0;border-bottom:1px solid #292d38}.save b{font-size:12px}.save small{display:block;color:#858b98;font-size:10px;margin-top:3px}@keyframes wob{0%{transform:translateX(0)}25%{transform:translateX(-7px)}50%{transform:translateX(7px)}75%{transform:translateX(-4px)}100%{transform:translateX(0)}}.spinning{animation:wob .1s linear infinite}@media(max-width:430px){.stats{grid-template-columns:1fr}.hero h1{font-size:29px}}
+</style></head><body><main class="app">
+<header class="head"><span>CHARACTER // ROULETTE</span><span class="ver">V3.0</span></header>
+<section class="hero"><h1>Crie um personagem impossível.</h1><p>Uma roleta por vez. De humano comum a entidade divina.</p></section>
+<section id="game" class="card"><div class="kick">Construção</div><div class="progress"><i id="prog"></i></div><div class="stage">
+<div class="num" id="num"></div><h2 id="title"></h2><div class="hint" id="hint"></div>
+<div class="roulette" id="roulette"><div class="pointer">▼</div><div class="value" id="value">?</div><div class="sub" id="sub">TOQUE PARA GIRAR</div></div>
+<button class="spin" id="spin">🎰 GIRAR</button><button class="next hidden" id="next">PRÓXIMA ROLAGEM →</button><div class="effect hidden" id="effect"></div></div>
+<div class="tabs" id="tabs"></div></section>
 <section id="result" class="hidden">
-<div class="card">
-<div class="kicker">Personagem concluído</div>
-<div class="result-title" id="resultName"></div>
-<div class="result-sub" id="resultSub"></div>
-<div class="rarity" id="resultRarity"></div>
-<div class="tags" id="resultTags"></div>
-</div>
-
-<div class="card"><div class="kicker">Atributos finais</div><div class="stats" id="resultStats"></div></div>
-
-<div class="card"><div class="kicker">Resultados da roleta</div><div class="rows" id="resultRows"></div></div>
-
-<div class="card"><div class="kicker">Sinergias</div><div class="text" id="synergies"></div></div>
-
-<div class="card"><div class="kicker">História</div><div class="text" id="story"></div></div>
-
-<div class="card actions">
-<button id="saveBtn">💾 Salvar</button><button id="shareBtn">↗ Compartilhar</button>
-</div>
-
-<div class="card"><div class="kicker">Novo personagem</div><button class="spin-btn" id="restartBtn">🎰 COMEÇAR NOVA ROLAGEM</button></div>
-</section>
-
-<section class="card">
-<div class="kicker">Personagens salvos</div><div id="saved"></div>
-</section>
-</main>
-
+<div class="card"><div class="kick">Personagem concluído</div><div class="resultTitle" id="name"></div><div class="cyan" id="subtitle"></div><div class="rarity" id="rarity"></div><div class="tags" id="tags"></div></div>
+<div class="card"><div class="kick">Atributos finais</div><div class="stats" id="stats"></div></div>
+<div class="card"><div class="kick">Resultados</div><div class="rows" id="rows"></div></div>
+<div class="card"><div class="kick">Sinergias</div><div class="text" id="syn"></div></div>
+<div class="card"><div class="kick">História</div><div class="text" id="story"></div></div>
+<div class="card actions"><button id="save">💾 Salvar</button><button id="share">↗ Compartilhar</button></div>
+<div class="card"><button class="spin" id="again">🎰 CRIAR OUTRO</button></div></section>
+<section class="card"><div class="kick">Personagens salvos</div><div id="saved"></div></section></main>
 <script>
 "use strict";
-
-/* ==========================================================
-   V2 — UMA ROLAGEM POR VEZ
-   Tudo está dentro deste único index.html.
-   ========================================================== */
-
-const $ = id => document.getElementById(id);
-const pick = a => a[Math.floor(Math.random()*a.length)];
-const rand = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
-const clamp = (n,a=1,b=100) => Math.max(a,Math.min(b,Math.round(n)));
-
-const statNames={
- strength:"Força",speed:"Velocidade",resistance:"Resistência",
- intelligence:"Inteligência",wisdom:"Sabedoria",charisma:"Carisma",
- discipline:"Disciplina",creativity:"Criatividade",luck:"Sorte",
- combat:"Combate",potential:"Potencial",health:"Saúde"
-};
-
-/* Cada opção possui efeito estatístico real. */
+const $=x=>document.getElementById(x),pick=a=>a[Math.floor(Math.random()*a.length)],R=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,C=(n)=>Math.max(1,Math.min(100,Math.round(n)));
+const S={strength:"Força",durability:"Durabilidade",speed:"Velocidade",intelligence:"Inteligência",combat:"Combate",power:"Poder",potential:"Potencial",luck:"Sorte"};
+const base=()=>({strength:R(20,60),durability:R(20,60),speed:R(20,60),intelligence:R(20,60),combat:R(10,60),power:0,potential:R(20,70),luck:R(1,100)});
 const DB={
-species:[
-["Humano","Versátil",{potential:3}],
-["Elfo","Arcano",{intelligence:10,speed:8,creativity:10,resistance:-4}],
-["Meio-Elfo","Híbrido",{charisma:7,intelligence:7,speed:5,creativity:6}],
-["Orc","Brutal",{strength:22,resistance:18,speed:-8,intelligence:-7,combat:8}],
-["Anão","Inabalável",{strength:14,resistance:22,speed:-12,discipline:10,health:8}],
-["Vampiro","Sobrenatural",{speed:16,charisma:10,health:8,luck:-5,potential:20}],
-["Lobisomem","Predador",{strength:18,speed:15,resistance:16,wisdom:-5,combat:10}],
-["Demônio","Abissal",{strength:18,charisma:8,resistance:12,wisdom:-7,potential:25}],
-["Anjo","Celestial",{charisma:14,wisdom:15,resistance:8,potential:25,combat:5}],
-["Draconiano","Dracônico",{strength:20,resistance:20,intelligence:6,potential:22,health:10}],
-["Fada","Feérico",{speed:18,creativity:20,strength:-18,resistance:-10,potential:15}],
-["Android","Artificial",{intelligence:15,discipline:14,resistance:10,creativity:-5}],
-["Alienígena","Extraterrestre",{intelligence:10,speed:10,potential:15,luck:5}],
-["Gigante","Colossal",{strength:30,resistance:25,speed:-20,health:20}],
-["Espírito","Ethereal",{wisdom:18,creativity:15,resistance:-12,potential:20}]
+race:[
+["Humano","Comum",{potential:5}],["Humano aprimorado","Evoluído",{strength:10,speed:10,durability:10,potential:12}],["Elfo","Feérico",{speed:12,intelligence:12,potential:12}],["Anão","Resistente",{durability:20,strength:12,speed:-8}],["Orc","Brutal",{strength:24,durability:18,speed:-8,intelligence:-8,combat:8}],["Oni","Sobrenatural",{strength:20,durability:15,combat:10,potential:12}],["Vampiro","Imortal",{speed:18,durability:10,power:18,potential:20}],["Lobisomem","Predador",{strength:20,speed:18,durability:18,combat:12}],["Demônio","Abissal",{strength:20,durability:15,power:20,potential:25}],["Anjo","Celestial",{speed:14,intelligence:14,durability:12,power:25,potential:30}],["Semideus","Divino",{strength:20,durability:20,intelligence:10,power:30,potential:35}],["Deus","Divindade",{strength:35,durability:35,intelligence:25,speed:25,power:60,potential:45}],["Titã","Colossal",{strength:40,durability:45,speed:-15,power:25}],["Dragão","Dracônico",{strength:35,durability:35,speed:10,intelligence:12,power:35,potential:30}],["Fada","Feérico",{speed:20,intelligence:12,power:12,strength:-18,durability:-10}],["Espírito","Ethereal",{speed:12,intelligence:18,power:22,durability:-15,potential:25}],["Yokai","Sobrenatural",{speed:10,power:18,luck:8,potential:18}],["Kitsune","Místico",{speed:14,intelligence:15,power:20,luck:12}],["Android","Artificial",{strength:12,durability:18,speed:8,intelligence:18,potential:12}],["Ciborgue","Híbrido tecnológico",{strength:18,durability:18,speed:12,intelligence:12}],["Alienígena","Extraterrestre",{speed:10,intelligence:12,potential:20}],["Mutante","Genético",{strength:R(5,25),speed:R(5,25),durability:R(5,25),potential:25}],["Entidade cósmica","Transcendente",{strength:35,durability:40,speed:30,intelligence:35,power:55,potential:45}],["Entidade conceitual","Além da matéria",{intelligence:35,power:65,potential:50,durability:35}]
 ],
-origin:[
-["Família pobre","Poucos recursos",{discipline:5,resistance:7,luck:-10}],
-["Classe média","Estável",{intelligence:4,discipline:4,health:3}],
-["Família rica","Privilegiado",{charisma:8,intelligence:8,luck:8,discipline:-2}],
-["Nobreza","Elite",{charisma:15,wisdom:8,discipline:7,luck:8}],
-["Órfão","Independente",{resistance:12,wisdom:7,discipline:6,luck:-12}],
-["Clã guerreiro","Militar",{strength:10,combat:18,discipline:10,charisma:-3}],
-["Academia de elite","Intelectual",{intelligence:16,wisdom:12,discipline:10,creativity:5}],
-["Família de artistas","Criativo",{creativity:18,charisma:10,wisdom:5,discipline:-3}],
-["Experimento científico","Artificial",{intelligence:14,resistance:10,potential:15,wisdom:-4}],
-["Templo religioso","Espiritual",{wisdom:18,discipline:14,charisma:4,luck:4}],
-["Submundo","Criminal",{speed:8,combat:15,wisdom:8,charisma:-5,discipline:-4}]
+title:[
+["Pessoa comum","Civil",{}],["Estudante","Civil",{}],["Atleta","Especialista",{speed:6,combat:4}],["Mercenário","Profissional",{combat:12}],["Soldado","Militar",{combat:14}],["Caçador","Rastreador",{speed:8,combat:12}],["Assassino","Elite",{speed:12,combat:20}],["Espadachim","Guerreiro",{combat:20,speed:8}],["Mestre de artes marciais","Mestre",{combat:24,strength:8}],["Mago","Arcanista",{intelligence:12,power:10}],["Cientista","Pesquisador",{intelligence:22}],["Inventor","Engenheiro",{intelligence:18,potential:10}],["Nobre","Aristocrata",{intelligence:5,luck:12}],["Príncipe","Herdeiro",{luck:15,potential:8}],["Rei","Soberano",{intelligence:8,combat:8,luck:18,potential:12}],["Imperador","Conquistador",{combat:12,intelligence:12,luck:18,potential:18}],["General","Comandante",{combat:16,intelligence:15}],["Herói","Campeão",{combat:18,power:8,potential:20,luck:10}],["Vilão","Antagonista",{intelligence:10,combat:12,potential:18}],["Guardião","Protetor",{durability:18,combat:14}],["Campeão divino","Escolhido",{combat:20,power:20,potential:25}],["Deus-rei","Soberano divino",{strength:20,intelligence:15,power:35,potential:30}],["Entidade suprema","Existência superior",{power:45,potential:35}]
 ],
-personality:[
-["Gênio","Mente excepcional",{intelligence:22,creativity:15,discipline:-4}],
-["Disciplinado","Focado",{discipline:20,combat:8,health:5,luck:-2}],
-["Empático","Diplomático",{charisma:10,wisdom:12,creativity:6,combat:-4}],
-["Impulsivo","Incontrolável",{speed:8,combat:10,discipline:-15,wisdom:-8}],
-["Reservado","Observador",{wisdom:10,creativity:10,charisma:-8,discipline:6}],
-["Ambicioso","Obstinado",{charisma:8,discipline:10,potential:8,wisdom:-3}],
-["Preguiçoso","Improvisador",{creativity:7,luck:5,discipline:-22,health:-4}],
-["Carismático","Influente",{charisma:22,wisdom:5,discipline:3}],
-["Paranoico","Desconfiado",{wisdom:10,speed:5,charisma:-10,luck:-3}],
-["Honrado","Inflexível",{wisdom:10,discipline:14,charisma:5,combat:4}]
+age:[
+["7 anos","Criança",{strength:-20,durability:-20,combat:-25}],["12 anos","Pré-adolescente",{strength:-12,durability:-10,combat:-12}],["16 anos","Adolescente",{potential:8}],["21 anos","Adulto jovem",{speed:5,potential:10}],["28 anos","Adulto",{strength:5,durability:5,intelligence:5,combat:5}],["40 anos","Experiente",{intelligence:10,combat:10,durability:5,speed:-3}],["65 anos","Veterano",{intelligence:15,combat:15,speed:-12}],["100 anos","Ancião",{intelligence:22,combat:20,speed:-18}],["500 anos","Antigo",{intelligence:30,combat:25,power:10,potential:15}],["2.000 anos","Milenar",{intelligence:38,combat:30,power:20,potential:20}],["10.000 anos","Imemorial",{intelligence:45,combat:35,power:30,potential:25}],["1.000.000+ anos","Primordial",{intelligence:55,combat:45,power:45,potential:35}]
 ],
-talent:[
-["Força excepcional","Corpo prodígio",{strength:25,resistance:10,combat:8}],
-["Mente analítica","Raciocínio prodígio",{intelligence:20,wisdom:12,creativity:8}],
-["Reflexos absurdos","Velocidade prodígio",{speed:24,combat:12}],
-["Líder nato","Liderança",{charisma:22,wisdom:8,discipline:8}],
-["Artista prodígio","Expressão",{creativity:25,charisma:8}],
-["Sobrevivente","Instinto",{resistance:18,wisdom:12,luck:5,health:8}],
-["Aprendiz rápido","Aprendizado",{intelligence:12,discipline:10,potential:14}],
-["Espadachim prodígio","Combate técnico",{combat:25,speed:8,discipline:8}],
-["Inventor","Engenharia",{intelligence:17,creativity:16,discipline:7}],
-["Nenhum talento evidente","Comum",{luck:3}]
+force:[
+["Inofensivo","Humano fraco",{strength:-20,durability:-10}],["Humano comum","Normal",{}],["Atlético","Acima da média",{strength:10,durability:8}],["Humano excepcional","Elite humana",{strength:20,durability:15}],["Sobre-humano","Super-humano",{strength:35,durability:25}],["Monstruoso","Nível monstro",{strength:50,durability:40}],["Titânico","Nível titã",{strength:65,durability:60}],["Destruidor de cidades","Escala urbana",{strength:78,durability:72}],["Destruidor de países","Escala nacional",{strength:86,durability:82}],["Planetário","Escala planetária",{strength:92,durability:90}],["Estelar","Escala estelar",{strength:96,durability:95}],["Galáctico","Escala galáctica",{strength:98,durability:98}],["Universal","Escala universal",{strength:100,durability:100}],["Multiversal","Escala multiversal",{strength:100,durability:100,power:30}],["Transcendente","Além das escalas",{strength:100,durability:100,power:45,potential:35}]
 ],
-energy:[
-["Nenhum sistema","Sem energia",{potential:-8}],
-["Ki","Energia vital",{strength:7,resistance:7,discipline:8,combat:10,potential:8}],
-["Mana","Energia mágica",{intelligence:10,creativity:12,potential:14,resistance:-3}],
-["Aura","Força interior",{charisma:6,wisdom:10,discipline:10,potential:12}],
-["Energia espiritual","Força espiritual",{wisdom:15,resistance:5,potential:15}],
-["Energia demoníaca","Poder sombrio",{strength:10,combat:10,potential:20,wisdom:-6}],
-["Energia divina","Poder celestial",{wisdom:14,charisma:10,health:8,potential:23}],
-["Poder psíquico","Força mental",{intelligence:16,wisdom:10,potential:20,resistance:-5}],
-["Tecnologia","Fonte artificial",{intelligence:12,discipline:15,resistance:8,potential:12}]
+speed:[
+["Imóvel","Extremamente lento",{speed:-25}],["Humana","Normal",{}],["Atlética","Muito rápido",{speed:12}],["Supersônica","Acima do som",{speed:35}],["Hiperveloz","Múltiplos Mach",{speed:55}],["Relativística","Próximo da luz",{speed:72}],["Velocidade da luz","Luminal",{speed:86}],["Superluminal","Além da luz",{speed:94}],["Temporal","Além do tempo",{speed:100,power:15}],["Incompreensível","Percepção instantânea",{speed:100,power:30}]
 ],
+intelligence:[
+["Muito baixa","Ingênuo",{intelligence:-25}],["Comum","Normal",{}],["Inteligente","Acima da média",{intelligence:12}],["Gênio","Mente excepcional",{intelligence:28}],["Supergênio","Intelecto raro",{intelligence:45}],["Intelecto extraordinário","Mente monstruosa",{intelligence:62}],["Transcendente","Consciência superior",{intelligence:82}],["Onisciente","Conhecimento quase total",{intelligence:100,power:25}]
+],
+combat:[
+["Inexperiente","Sem treinamento",{combat:-15}],["Amador","Básico",{combat:4}],["Treinado","Competente",{combat:15}],["Soldado","Profissional",{combat:28}],["Especialista","Elite",{combat:42}],["Mestre","Mestre absoluto",{combat:58}],["Mestre lendário","Quase perfeito",{combat:72}],["Combatente sobrenatural","Além do humano",{combat:86}],["Guerreiro divino","Nível divino",{combat:96,potential:15}],["Invencível","Domínio absurdo",{combat:100,power:20}]
+],
+yesno:[["Não","Sem poderes",{}],["Sim","Possui poderes",{potential:8}]],
 power:[
-["Nenhum poder",0,{potential:-5}],
-["Superforça",55,{strength:25,resistance:8,combat:10}],
-["Supervelocidade",70,{speed:28,combat:12,resistance:-4}],
-["Regeneração",80,{health:28,resistance:10,potential:18}],
-["Telecinese",86,{intelligence:10,potential:25,creativity:8}],
-["Telepatia",84,{intelligence:12,wisdom:10,potential:22,charisma:5}],
-["Pirocinese",72,{potential:15,combat:10,creativity:5}],
-["Manipulação de gelo",70,{resistance:5,potential:15,intelligence:6}],
-["Manipulação de sombras",87,{speed:8,creativity:12,potential:24}],
-["Ilusão",78,{creativity:20,wisdom:5,potential:18}],
-["Teletransporte",91,{speed:18,intelligence:10,potential:30}],
-["Intangibilidade",90,{speed:10,resistance:10,potential:28}],
-["Manipulação gravitacional",94,{strength:8,intelligence:10,potential:31}],
-["Manipulação espacial",97,{intelligence:14,wisdom:8,potential:38}],
-["Manipulação temporal",99,{intelligence:15,wisdom:12,potential:42,discipline:-4}],
-["Controle de matéria",98,{intelligence:18,creativity:15,potential:40}],
-["Cópia de habilidades",95,{intelligence:8,potential:34,luck:5}],
-["Invocação",82,{creativity:12,wisdom:8,potential:22}],
-["Absorção de energia",89,{resistance:12,potential:26,combat:8}]
+["Superforça","Físico",{power:55,strength:25}],["Supervelocidade","Físico",{power:70,speed:28}],["Regeneração","Biológico",{power:80,durability:18,potential:18}],["Voo","Mobilidade",{power:45,speed:12}],["Telepatia","Mental",{power:82,intelligence:15}],["Telecinese","Mental",{power:86,intelligence:10}],["Controle mental","Mental",{power:88,intelligence:15}],["Ilusão","Mental",{power:76,intelligence:12}],["Precognição","Temporal",{power:90,intelligence:18}],["Pirocinese","Elemental",{power:68}],["Criocinese","Elemental",{power:68}],["Eletrocinese","Elemental",{power:72,speed:8}],["Manipulação de sombras","Energético",{power:86}],["Manipulação de luz","Energético",{power:88,speed:8}],["Manipulação de sangue","Biológico",{power:82}],["Manipulação de almas","Espiritual",{power:93}],["Necromancia","Espiritual",{power:90,intelligence:10}],["Invocação","Arcano",{power:80,intelligence:10}],["Teletransporte","Espacial",{power:92,speed:18}],["Portais dimensionais","Espacial",{power:94,intelligence:12}],["Intangibilidade","Espacial",{power:91,durability:10}],["Manipulação gravitacional","Cósmico",{power:95}],["Manipulação espacial","Cósmico",{power:97,intelligence:15}],["Manipulação temporal","Cósmico",{power:99,intelligence:18,potential:25}],["Parar o tempo","Temporal",{power:100,intelligence:20}],["Voltar no tempo","Temporal",{power:100,potential:30}],["Loop temporal","Temporal",{power:99,intelligence:15}],["Manipulação de matéria","Conceitual",{power:98,intelligence:20}],["Manipulação da realidade","Conceitual",{power:100,intelligence:25,potential:35}],["Manipulação da causalidade","Conceitual",{power:100,intelligence:30,potential:40}],["Manipulação da probabilidade","Conceitual",{power:98,luck:35}],["Manipulação do destino","Conceitual",{power:100,potential:40}],["Manipulação da vida","Conceitual",{power:99}],["Manipulação da morte","Conceitual",{power:100}],["Criação de vida","Conceitual",{power:100,intelligence:20}],["Absorção de energia","Energético",{power:89,durability:12}],["Cópia de habilidades","Meta",{power:95,potential:35}],["Roubo de habilidades","Meta",{power:96,potential:30}],["Adaptação","Biológico",{power:92,durability:20,potential:30}],["Evolução instantânea","Biológico",{power:96,potential:45}],["Imortalidade","Sobrenatural",{power:97,durability:25,potential:25}],["Manipulação de conceitos","Transcendente",{power:100,intelligence:25,potential:45}],["Existência abstrata","Transcendente",{power:100,durability:100,potential:50}]
 ],
-body:[
-["Frágil",{}, {resistance:-15,health:-10}],
-["Normal",{},{}],
-["Atlético",{speed:10,resistance:10,health:7,combat:6},{}],
-["Musculoso",{strength:15,resistance:12,speed:-3,combat:8},{}],
-["Ágil",{speed:17,combat:9,resistance:-3},{}],
-["Resistência anormal",{resistance:22,health:15,speed:-5},{}],
-["Aparência excepcional",{charisma:18,luck:5},{}]
+weapon:[
+["Nenhuma","Desarmado",{}],["Faca","Simples",{combat:3}],["Espada","Clássica",{combat:8}],["Katana","Lâmina",{combat:10,speed:3}],["Lança","Alcance",{combat:9}],["Arco","Precisão",{combat:8}],["Machado","Pesada",{strength:8,combat:8,speed:-3}],["Martelo","Brutal",{strength:12,combat:8,speed:-6}],["Foice","Exótica",{combat:10,speed:3}],["Armas de fogo","Tecnológica",{combat:14}],["Arma de energia","Futurista",{combat:22,power:15}],["Arma viva","Simbiótica",{combat:20,power:18,potential:15}],["Arma amaldiçoada","Sombria",{combat:25,power:25,luck:-8}],["Artefato mágico","Arcano",{intelligence:8,power:28}],["Arma lendária","Relíquia",{combat:35,power:35,potential:15}],["Arma divina","Celestial",{combat:45,power:45,potential:20}],["Arma cósmica","Transcendente",{combat:60,power:60,potential:30}],["Arma conceitual","Absoluta",{combat:75,power:75,potential:40}]
 ],
-luck:[
-["Azar extremo",-25,{luck:-25}],
-["Azarado",-12,{luck:-12}],
-["Normal",0,{}],
-["Sortudo",12,{luck:12}],
-["Extremamente sortudo",25,{luck:25}],
-["Fortuna absurda",35,{luck:35,potential:5}]
-],
-difficulty:[
-["Vida tranquila",10,{health:5,discipline:3,luck:5}],
-["Vida comum",30,{}],
-["Vida difícil",55,{resistance:8,wisdom:6,health:-4}],
-["Vida brutal",75,{resistance:14,wisdom:10,combat:8,health:-8}],
-["Inferno",95,{resistance:20,wisdom:15,combat:12,health:-15,luck:-10}]
-],
-destiny:[
-["Vida comum",{},{}],
-["Herói improvável",{potential:10,charisma:5,luck:8},{}],
-["Vilão em ascensão",{potential:18,charisma:8,wisdom:-5,luck:2},{}],
-["Lenda mundial",{potential:25,charisma:12,luck:12},{}],
-["Escolhido",{potential:30,wisdom:10,charisma:8},{}],
-["Tragédia anunciada",{potential:8,wisdom:12,resistance:8,luck:-22},{}]
-]};
-
-/* Ordem deliberada: resultados anteriores influenciam a ficha,
-   mas não precisamos contar história até o fim. */
-const rounds=[
-["species","ESPÉCIE","De onde esse personagem veio?"],
-["origin","ORIGEM","O ambiente que moldou sua vida."],
-["personality","PERSONALIDADE","Como sua mente funciona."],
-["talent","TALENTO","Aquilo que ele faz naturalmente melhor."],
-["energy","SISTEMA DE ENERGIA","Como seu poder é canalizado."],
-["power","PODER","A habilidade extraordinária, se houver."],
-["body","CONDIÇÃO FÍSICA","Como seu corpo se desenvolveu."],
-["luck","SORTE","Quanto o acaso favorece esse personagem."],
-["difficulty","DIFICULDADE DA VIDA","O nível de adversidade enfrentado."],
-["destiny","DESTINO","A direção provável de sua vida."]
-];
-
-let state={
- index:0,
- character:{
-  stats:{strength:rand(35,65),speed:rand(35,65),resistance:rand(35,65),
-   intelligence:rand(35,65),wisdom:rand(35,65),charisma:rand(35,65),
-   discipline:rand(35,65),creativity:rand(35,65),luck:rand(25,75),
-   combat:rand(30,65),potential:rand(35,70),health:rand(40,70)},
-  picks:[],synergies:[]
- },
- spinning:false
+luck:[["Azar extremo","O universo te odeia",{luck:-45}],["Muito azarado","Má sorte",{luck:-25}],["Azarado","Pouca sorte",{luck:-12}],["Normal","Neutro",{}],["Sortudo","Boa sorte",{luck:12}],["Muito sortudo","Fortuna",{luck:25}],["Extremamente sortudo","Sorte absurda",{luck:40}],["Abençoado pelo destino","Acaso impossível",{luck:60}],["Sorte impossível","Probabilidade quebrada",{luck:80,potential:10}]],
+weakness:[["Nenhuma fraqueza","Sem fraqueza conhecida",{}],["Corpo frágil","Baixa resistência",{durability:-18}],["Velocidade limitada","Mobilidade baixa",{speed:-15}],["Intelecto limitado","Mente simples",{intelligence:-15}],["Inexperiência","Pouco combate",{combat:-18}],["Poder instável","Difícil controlar",{power:-8,potential:8}],["Poder consome energia","Custo alto",{durability:-8,potential:5}],["Vulnerabilidade elemental","Fraqueza específica",{durability:-10,luck:-5}],["Fraqueza mental","Instabilidade",{intelligence:-8,combat:-8}],["Mortalidade","Pode morrer",{potential:-5}],["Maldição","Preço sobrenatural",{luck:-15,power:5}]],
+potential:[["Sem potencial","Quase não evolui",{potential:5}],["Baixo","Crescimento limitado",{potential:25}],["Normal","Crescimento comum",{potential:50}],["Alto","Grande futuro",{potential:70}],["Prodígio","Talento raro",{potential:82}],["Monstruoso","Potencial absurdo",{potential:92}],["Divino","Pode alcançar o impossível",{potential:97}],["Transcendente","Potencial sem teto",{potential:100}]]
 };
-
-function apply(stats,mods){
- for(const [k,v] of Object.entries(mods||{})){
-  if(k in stats)stats[k]+=v;
- }
-}
-
-function optionFor(key){
- const item=pick(DB[key]);
- return {name:item[0],tag:item[1],mods:item[2]||{}};
-}
-
-function effectText(mods){
- const entries=Object.entries(mods||{}).filter(([,v])=>v);
- if(!entries.length)return '<strong>EFEITO:</strong> nenhum modificador direto';
- return '<strong>EFEITOS:</strong><div class="mods">'+entries.map(([k,v])=>
-  `<span class="mod">${statNames[k]} ${v>0?"+":""}${v}</span>`).join("")+'</div>';
-}
-
-function updateProgress(){
- $("progress").style.width=(state.index/rounds.length*100)+"%";
-}
-
-function showRound(){
- const [key,title,hint]=rounds[state.index];
- $("roundNumber").textContent=`GIRO ${state.index+1} / ${rounds.length}`;
- $("roundTitle").textContent=title;
- $("roundHint").textContent=hint;
- $("spinValue").textContent="?";
- $("spinSub").textContent="TOQUE PARA GIRAR";
- $("spinBtn").disabled=false;
- $("spinBtn").textContent="🎰 GIRAR";
- $("nextBtn").classList.add("hidden");
- $("effect").classList.add("hidden");
- updateProgress();
-
- document.querySelectorAll(".tab").forEach((el,i)=>{
-  el.classList.toggle("on",i<state.index);
- });
-}
-
-function spin(){
- if(state.spinning)return;
- state.spinning=true;
- $("spinBtn").disabled=true;
- $("roulette").classList.add("spinning");
-
- const [key]=rounds[state.index];
- const options=DB[key];
- let ticks=0;
- const total=18+Math.floor(Math.random()*10);
-
- const timer=setInterval(()=>{
-  $("spinValue").textContent=options[Math.floor(Math.random()*options.length)][0];
-  ticks++;
-  if(ticks>=total){
-   clearInterval(timer);
-   finishSpin(key);
-  }
- },70);
-}
-
-function finishSpin(key){
- const chosen=optionFor(key);
- state.character.picks.push({key,...chosen});
- apply(state.character.stats,chosen.mods);
-
- /* Pequenas sinergias surgem somente da combinação, não de narrativa. */
- calculateSynergy();
-
- for(const k of Object.keys(state.character.stats)){
-  state.character.stats[k]=clamp(state.character.stats[k]);
- }
-
- $("roulette").classList.remove("spinning");
- $("spinValue").textContent=chosen.name;
- $("spinSub").textContent=chosen.tag||"RESULTADO";
- $("effect").innerHTML=effectText(chosen.mods);
- $("effect").classList.remove("hidden");
- $("nextBtn").classList.remove("hidden");
-
- if(state.index===rounds.length-1){
-  $("nextBtn").textContent="👤 GERAR PERSONAGEM FINAL";
- }else{
-  $("nextBtn").textContent="PRÓXIMA ROLAGEM →";
- }
-
- state.spinning=false;
-}
-
-function calculateSynergy(){
- const c=state.character;
- const names=c.picks.map(x=>x.name);
- const add=(label,mods)=>{
-  if(c.synergies.some(x=>x.label===label))return;
-  apply(c.stats,mods);
-  c.synergies.push({label,mods});
- };
-
- if(names.includes("Orc")&&names.includes("Clã guerreiro"))
-  add("Orc + Clã guerreiro",{strength:8,combat:10,resistance:6});
-
- if(names.includes("Elfo")&&names.includes("Mana"))
-  add("Elfo + Mana",{intelligence:7,creativity:7,potential:8});
-
- if(names.includes("Vampiro")&&names.includes("Energia demoníaca"))
-  add("Vampiro + Energia demoníaca",{potential:10,speed:5,combat:5});
-
- if(names.includes("Gênio")&&names.includes("Mente analítica"))
-  add("Gênio + Mente analítica",{intelligence:8,creativity:5,potential:5});
-
- if(names.includes("Espadachim prodígio")&&names.includes("Ki"))
-  add("Espadachim + Ki",{combat:8,discipline:6,speed:4});
-
- if(names.includes("Manipulação temporal")&&names.includes("Mente analítica"))
-  add("Tempo + Mente analítica",{intelligence:8,wisdom:8,potential:8});
-
- if(names.includes("Manipulação temporal")&&names.includes("Nenhum sistema"))
-  add("Tempo sem sistema de energia",{potential:-8,discipline:-5});
-
- if(names.includes("Impulsivo")&&names.includes("Manipulação temporal"))
-  add("Impulsividade + Tempo",{combat:5,discipline:-8});
-
- if(names.includes("Tragédia anunciada"))
-  add("Destino trágico",{wisdom:5,resistance:5});
-
- if(names.includes("Lenda mundial")||names.includes("Escolhido"))
-  add("Destino excepcional",{charisma:5,potential:6});
-}
-
-function next(){
- if(state.spinning)return;
- if(state.index>=rounds.length-1){
-  finishCharacter();
-  return;
- }
- state.index++;
- showRound();
- window.scrollTo({top:0,behavior:"smooth"});
-}
-
-function derived(c){
- const s=c.stats;
- const avg=Object.values(s).reduce((a,b)=>a+b,0)/Object.keys(s).length;
- const powerPick=c.picks.find(x=>x.key==="power");
- const powerLevel={
-  "Nenhum poder":0,"Superforça":55,"Supervelocidade":70,"Regeneração":80,
-  "Telecinese":86,"Telepatia":84,"Pirocinese":72,"Manipulação de gelo":70,
-  "Manipulação de sombras":87,"Ilusão":78,"Teletransporte":91,
-  "Intangibilidade":90,"Manipulação gravitacional":94,"Manipulação espacial":97,
-  "Manipulação temporal":99,"Controle de matéria":98,"Cópia de habilidades":95,
-  "Invocação":82,"Absorção de energia":89
- }[powerPick?.name]||0;
- return{
-  overall:clamp(avg*.72+powerLevel*.13+s.potential*.1+s.luck*.05),
-  power:clamp(powerLevel*.65+s.potential*.35),
-  social:clamp(s.charisma*.45+s.wisdom*.2+s.intelligence*.15+s.discipline*.1+s.luck*.1),
-  survival:clamp(s.health*.3+s.resistance*.3+s.wisdom*.15+s.speed*.1+s.luck*.15)
- };
-}
-
-function getPick(key){return state.character.picks.find(x=>x.key===key)}
-
-function makeStory(c,d,name){
- const species=getPick("species")?.name||"humano";
- const origin=getPick("origin")?.name||"origem desconhecida";
- const personality=getPick("personality")?.name||"personalidade indefinida";
- const talent=getPick("talent")?.name||"talento comum";
- const energy=getPick("energy")?.name||"nenhum sistema";
- const power=getPick("power")?.name||"nenhum poder";
- const body=getPick("body")?.name||"corpo normal";
- const difficulty=getPick("difficulty")?.name||"vida comum";
- const destiny=getPick("destiny")?.name||"vida comum";
-
- let opening=`${name} nasceu como ${species.toLowerCase()}, em uma ${origin.toLowerCase()}. `;
- let mind=`Desde cedo, sua personalidade ${personality.toLowerCase()} moldou suas decisões. `;
- let gift=`Seu talento natural para ${talent.toLowerCase()} chamou atenção, enquanto seu corpo ${body.toLowerCase()} determinou a forma como enfrentava o mundo. `;
- let powerText=power==="Nenhum poder"
-  ? `Apesar de não possuir um poder sobrenatural conhecido, ${name} desenvolveu suas capacidades por meio de ${energy.toLowerCase()}. `
-  : `${name} despertou ${power.toLowerCase()}, canalizado através de ${energy.toLowerCase()}. `;
- let struggle=`Sua trajetória foi marcada por ${difficulty.toLowerCase()}, obrigando-o a transformar suas limitações em experiência. `;
- let ending=`Com um índice geral de ${d.overall}/100 e potencial de ${c.stats.potential}/100, seu destino aponta para ${destiny.toLowerCase()}. `;
-
- const best=Object.entries(c.stats).sort((a,b)=>b[1]-a[1])[0];
- const worst=Object.entries(c.stats).sort((a,b)=>a[1]-b[1])[0];
-
- return opening+mind+gift+powerText+struggle+
-  `Ao longo dos anos, ${name} se tornou especialmente conhecido por ${statNames[best[0]].toLowerCase()}, alcançando ${best[1]}/100 nesse atributo. `+
-  `Sua maior vulnerabilidade permaneceu sendo ${statNames[worst[0]].toLowerCase()}, com ${worst[1]}/100. `+
-  ending+
-  `O que acontecerá depois dependerá das escolhas que fizer, mas as condições desta ficha já definiram uma trajetória muito diferente de uma vida comum.`;
-}
-
-function finishCharacter(){
- const c=state.character;
- const d=derived(c);
- const first=["Kael","Auren","Nox","Darian","Riven","Aster","Ren","Kairo","Lys","Orion","Nyra","Soren"];
- const last=["Valen","Drake","Noctis","Ardent","Kane","Solari","Voss","Raven"];
- const name=pick(first)+" "+pick(last);
-
- const rarity=d.overall>=90?"★★★★★ LENDÁRIO":d.overall>=78?"★★★★☆ ÉPICO":d.overall>=62?"★★★☆☆ RARO":d.overall>=45?"★★☆☆☆ INCOMUM":"★☆☆☆☆ COMUM";
-
- c.derived=d;c.name=name;c.rarity=rarity;
-
- $("game").classList.add("hidden");
- $("result").classList.remove("hidden");
-
- $("resultName").textContent=name;
- $("resultSub").textContent=`${getPick("species").name} • ${getPick("power").name} • ${getPick("destiny").name}`;
- $("resultRarity").textContent=`${rarity}  •  Índice geral ${d.overall}/100`;
-
- const tags=c.picks.map(x=>x.name);
- $("resultTags").innerHTML=tags.map(x=>`<span class="tag">${x}</span>`).join("");
-
- $("resultStats").innerHTML=Object.entries(c.stats).map(([k,v])=>
- `<div class="stat"><div class="stat-top"><span>${statNames[k]}</span><b>${v}</b></div><div class="bar"><div class="fill" style="width:${v}%"></div></div></div>`).join("");
-
- $("resultRows").innerHTML=c.picks.map(x=>
- `<div class="row"><span>${rounds.find(r=>r[0]===x.key)[1]}</span><b>${x.name}</b></div>`).join("");
-
- $("synergies").innerHTML=c.synergies.length
-  ? c.synergies.map(x=>`<b>✦ ${x.label}</b><br>`+Object.entries(x.mods).map(([k,v])=>`${statNames[k]} ${v>0?"+":""}${v}`).join(" • ")).join("<br><br>")
-  : "Nenhuma sinergia especial foi ativada. O personagem é definido principalmente pelos resultados individuais.";
-
- $("story").textContent=makeStory(c,d,name);
-
- window.scrollTo({top:0,behavior:"smooth"});
-}
-
-function reset(){
- state={
-  index:0,
-  character:{
-   stats:{strength:rand(35,65),speed:rand(35,65),resistance:rand(35,65),
-    intelligence:rand(35,65),wisdom:rand(35,65),charisma:rand(35,65),
-    discipline:rand(35,65),creativity:rand(35,65),luck:rand(25,75),
-    combat:rand(30,65),potential:rand(35,70),health:rand(40,70)},
-   picks:[],synergies:[]
-  },
-  spinning:false
- };
- $("result").classList.add("hidden");
- $("game").classList.remove("hidden");
- showRound();
- window.scrollTo({top:0,behavior:"smooth"});
-}
-
-function saved(){
- try{return JSON.parse(localStorage.getItem("character_roulette_v2")||"[]")}catch(e){return[]}
-}
-function renderSaved(){
- const list=saved();
- $("saved").innerHTML=list.length?list.map((c,i)=>
- `<div class="save" data-i="${i}"><b>${c.name}</b><small>${c.rarity} • ${c.resultSub}</small></div>`).join("")
- :'<div class="empty">Nenhum personagem salvo.</div>';
-
- document.querySelectorAll(".save").forEach(el=>el.onclick=()=>{
-  const c=list[Number(el.dataset.i)];
-  loadSaved(c);
- });
-}
-function saveCurrent(){
- if(!state.character.derived){alert("Gere o personagem primeiro.");return}
- const list=saved();
- const c=JSON.parse(JSON.stringify(state.character));
- c.resultSub=$("resultSub").textContent;
- list.unshift(c);
- localStorage.setItem("character_roulette_v2",JSON.stringify(list.slice(0,30)));
- renderSaved();
- alert("Personagem salvo!");
-}
-function loadSaved(c){
- state.character=c;
- $("game").classList.add("hidden");
- $("result").classList.remove("hidden");
- $("resultName").textContent=c.name;
- $("resultSub").textContent=c.resultSub||"Personagem salvo";
- $("resultRarity").textContent=c.rarity||"";
- $("resultTags").innerHTML=c.picks.map(x=>`<span class="tag">${x.name}</span>`).join("");
- $("resultStats").innerHTML=Object.entries(c.stats).map(([k,v])=>
- `<div class="stat"><div class="stat-top"><span>${statNames[k]}</span><b>${v}</b></div><div class="bar"><div class="fill" style="width:${v}%"></div></div></div>`).join("");
- $("resultRows").innerHTML=c.picks.map(x=>
- `<div class="row"><span>${rounds.find(r=>r[0]===x.key)[1]}</span><b>${x.name}</b></div>`).join("");
- $("synergies").innerHTML=c.synergies?.length?c.synergies.map(x=>`<b>✦ ${x.label}</b>`).join("<br>"):"Nenhuma.";
- $("story").textContent=makeStory(c,c.derived,c.name);
- window.scrollTo({top:0,behavior:"smooth"});
-}
-
-async function share(){
- if(!state.character.derived){alert("Gere o personagem primeiro.");return}
- const c=state.character;
- const text=`${c.name} — ${c.rarity}
-${$("resultSub").textContent}
-Índice geral: ${c.derived.overall}/100
-Poder: ${c.derived.power}/100`;
- try{
-  if(navigator.share)await navigator.share({title:"Meu personagem",text});
-  else{await navigator.clipboard.writeText(text);alert("Ficha copiada!")}
- }catch(e){}
-}
-
-$("spinBtn").onclick=spin;
-$("nextBtn").onclick=next;
-$("restartBtn").onclick=reset;
-$("saveBtn").onclick=saveCurrent;
-$("shareBtn").onclick=share;
-
-$("miniTabs").innerHTML=rounds.map((r,i)=>`<div class="tab ${i===0?"on":""}">${i+1}</div>`).join("");
-showRound();
-renderSaved();
-</script>
-</body>
-</html>
+const rounds=[["race","QUAL SUA RAÇA?","A origem biológica ou existencial."],["title","QUAL SEU TÍTULO?","O papel que você ocupa."],["age","QUAL SUA IDADE?","A idade pode variar enormemente."],["force","FORÇA E DURABILIDADE?","O nível físico bruto."],["speed","QUAL SUA VELOCIDADE?","Da humana ao além do tempo."],["intelligence","QUAL SUA INTELIGÊNCIA?","Do comum ao quase onisciente."],["combat","QUAL SEU NÍVEL DE COMBATE?","Técnica, experiência e domínio."],["yesno","VOCÊ POSSUI PODERES?","Se SIM, uma nova roleta será liberada."],["power","QUAL SEU PODER?","Somente se você possuir poderes."],["weapon","QUAL SUA ARMA?","De nenhuma arma a relíquias absurdas."],["luck","QUAL SUA SORTE?","O acaso pode mudar tudo."],["weakness","QUAL SUA FRAQUEZA?","Até monstros podem ter um ponto fraco."],["potential","QUAL SEU POTENCIAL?","Seu limite de crescimento."]];
+let state={index:0,character:{stats:base(),picks:[],synergies:[]},spinning:false};
+const active=()=>rounds.filter(r=>r[0]!=="power"||state.character.picks.some(x=>x.key==="yesno"&&x.name==="Sim"));
+function tabs(){const rs=active();$("tabs").innerHTML=rs.map((_,i)=>`<div class="tab ${i<=state.index?"on":""}">${i+1}</div>`).join("")}
+function show(){const rs=active(),r=rs[state.index];$("num").textContent=`GIRO ${state.index+1} / ${rs.length}`;$("title").textContent=r[1];$("hint").textContent=r[2];$("value").textContent="?";$("sub").textContent="TOQUE PARA GIRAR";$("spin").disabled=false;$("spin").textContent="🎰 GIRAR";$("next").classList.add("hidden");$("effect").classList.add("hidden");$("prog").style.width=state.index/rs.length*100+"%";tabs()}
+function spin(){if(state.spinning)return;state.spinning=true;$("spin").disabled=true;$("roulette").classList.add("spinning");const key=active()[state.index][0],opts=DB[key];let n=0,total=20+R(0,12);const t=setInterval(()=>{$("value").textContent=pick(opts)[0];if(++n>=total){clearInterval(t);finishSpin(key)}},55)}
+function finishSpin(key){const x=pick(DB[key]);const chosen={key,name:x[0],tag:x[1],mods:x[2]||{}};state.character.picks.push(chosen);Object.entries(chosen.mods).forEach(([k,v])=>{if(k in state.character.stats)state.character.stats[k]+=v});Object.keys(state.character.stats).forEach(k=>state.character.stats[k]=C(state.character.stats[k]));$("roulette").classList.remove("spinning");$("value").textContent=chosen.name;$("sub").textContent=chosen.tag;$("effect").innerHTML="<b>EFEITOS</b><div class='mods'>"+(Object.entries(chosen.mods).length?Object.entries(chosen.mods).map(([k,v])=>`<span class="mod">${S[k]||k} ${v>0?"+":""}${v}</span>`).join(""):"<span class='mod'>Nenhum modificador direto</span>")+"</div>";$("effect").classList.remove("hidden");$("next").classList.remove("hidden");$("next").textContent=state.index===active().length-1?"👤 CRIAR PERSONAGEM":"PRÓXIMA ROLAGEM →";state.spinning=false;tabs()}
+function next(){if(state.spinning)return;if(state.index>=active().length-1)return finish();state.index++;show();scrollTo({top:0,behavior:"smooth"})}
+function synergy(c){const n=c.picks.map(x=>x.name),o=[];const add=(l,m)=>{if(o.some(x=>x.label===l))return;Object.entries(m).forEach(([k,v])=>c.stats[k]+=v);o.push({label:l,mods:m})};if(n.includes("Deus")&&n.includes("Manipulação da realidade"))add("Deus + Realidade",{power:10,potential:8});if(n.includes("Vampiro")&&n.includes("Imortalidade"))add("Vampiro + Imortalidade",{power:8,speed:5,potential:8});if(n.includes("Dragão")&&n.includes("Arma divina"))add("Dragão + Arma divina",{strength:6,durability:6,power:10});if(n.includes("Mestre lendário")&&n.includes("Katana"))add("Mestre lendário + Katana",{combat:8,speed:4});if(n.includes("Gênio")&&n.includes("Manipulação da causalidade"))add("Intelecto + Causalidade",{intelligence:7,power:5});if(n.includes("Sorte impossível"))add("Sorte impossível",{potential:5,power:3});return o}
+function score(c){return C(Object.values(c.stats).reduce((a,b)=>a+b,0)/8)}
+function finish(){const c=state.character;c.synergies=synergy(c);Object.keys(c.stats).forEach(k=>c.stats[k]=C(c.stats[k]));c.score=score(c);const rn=["Auren","Kael","Ren","Nox","Soren","Riven","Orion","Kairo","Aster","Nyra","Lys","Darian","Eryx","Veyra","Akio","Mikael"],sn=["Valen","Voss","Drake","Ardent","Noctis","Raven","Solari","Kane","Astra","Veyne","Kuro","Zenith"];c.name=pick(rn)+" "+pick(sn);c.rarity=c.score>=96?"★★★★★ TRANSCENDENTE":c.score>=90?"★★★★★ LENDÁRIO":c.score>=78?"★★★★☆ ÉPICO":c.score>=62?"★★★☆☆ RARO":c.score>=45?"★★☆☆☆ INCOMUM":"★☆☆☆☆ COMUM";$("game").classList.add("hidden");$("result").classList.remove("hidden");$("name").textContent=c.name;$("subtitle").textContent=`${get("race")} • ${get("title")} • ${get("age")}`;$("rarity").textContent=`${c.rarity} • Índice ${c.score}/100`;$("tags").innerHTML=c.picks.map(x=>`<span class="tag">${x.name}</span>`).join("");$("stats").innerHTML=Object.entries(c.stats).map(([k,v])=>`<div class="stat"><div class="statTop"><span>${S[k]}</span><b>${v}</b></div><div class="bar"><i style="width:${v}%"></i></div></div>`).join("");$("rows").innerHTML=c.picks.map(x=>`<div class="row"><span>${rounds.find(r=>r[0]===x.key)[1]}</span><b>${x.name}</b></div>`).join("");$("syn").innerHTML=c.synergies.length?c.synergies.map(x=>`<b>✦ ${x.label}</b>`).join("<br>"):"Nenhuma sinergia especial.";$("story").textContent=story(c);scrollTo({top:0,behavior:"smooth"})}
+function get(k){return state.character.picks.find(x=>x.key===k)?.name||"desconhecido"}
+function story(c){const p=get("yesno")==="Sim"?`despertou ${get("power").toLowerCase()}`:"nunca despertou poderes sobrenaturais";const best=Object.entries(c.stats).sort((a,b)=>b[1]-a[1])[0],worst=Object.entries(c.stats).sort((a,b)=>a[1]-b[1])[0];return `${c.name} nasceu como ${get("race").toLowerCase()} e recebeu o título de ${get("title").toLowerCase()}. Aos ${get("age").split(" — ")[0]}, possuía força e durabilidade em nível ${get("force").toLowerCase()}, velocidade ${get("speed").toLowerCase()} e uma inteligência classificada como ${get("intelligence").toLowerCase()}. Seu nível de combate era ${get("combat").toLowerCase()}. Ao longo de sua existência, ${p}. Sua arma era ${get("weapon").toLowerCase()}, enquanto sua sorte foi ${get("luck").toLowerCase()}. A maior limitação conhecida era ${get("weakness").toLowerCase()}, mas seu potencial foi ${get("potential").toLowerCase()}. No estado atual, ${c.name} apresenta ${S[best[0]].toLowerCase()} como maior atributo (${best[1]}/100) e ${S[worst[0]].toLowerCase()} como maior vulnerabilidade (${worst[1]}/100). Essa combinação determinou uma trajetória de nível ${c.rarity.toLowerCase()}, deixando aberta a possibilidade de uma evolução muito além de sua condição inicial.`}
+function reset(){state={index:0,character:{stats:base(),picks:[],synergies:[]},spinning:false};$("result").classList.add("hidden");$("game").classList.remove("hidden");show();scrollTo({top:0,behavior:"smooth"})}
+function saved(){try{return JSON.parse(localStorage.getItem("cr_v3")||"[]")}catch(e){return[]}}
+function renderSaved(){const a=saved();$("saved").innerHTML=a.length?a.map((c,i)=>`<div class="save" data-i="${i}"><b>${c.name}</b><small>${c.rarity} • ${c.subtitle}</small></div>`).join(""):"<span style='color:#7e8491;font-size:11px'>Nenhum personagem salvo.</span>";document.querySelectorAll(".save").forEach(e=>e.onclick=()=>load(a[+e.dataset.i]))}
+function load(c){state.character=c;$("game").classList.add("hidden");$("result").classList.remove("hidden");$("name").textContent=c.name;$("subtitle").textContent=c.subtitle;$("rarity").textContent=`${c.rarity} • Índice ${c.score}/100`;$("tags").innerHTML=c.picks.map(x=>`<span class="tag">${x.name}</span>`).join("");$("stats").innerHTML=Object.entries(c.stats).map(([k,v])=>`<div class="stat"><div class="statTop"><span>${S[k]}</span><b>${v}</b></div><div class="bar"><i style="width:${v}%"></i></div></div>`).join("");$("rows").innerHTML=c.picks.map(x=>`<div class="row"><span>${rounds.find(r=>r[0]===x.key)?.[1]||x.key}</span><b>${x.name}</b></div>`).join("");$("syn").innerHTML=c.synergies?.length?c.synergies.map(x=>`<b>✦ ${x.label}</b>`).join("<br>"):"Nenhuma.";$("story").textContent=story(c)}
+$("spin").onclick=spin;$("next").onclick=next;$("again").onclick=reset;$("save").onclick=()=>{const c=JSON.parse(JSON.stringify(state.character));c.subtitle=$("subtitle").textContent;const a=saved();a.unshift(c);localStorage.setItem("cr_v3",JSON.stringify(a.slice(0,50)));renderSaved();alert("Personagem salvo!")};$("share").onclick=async()=>{const t=`${state.character.name} — ${state.character.rarity}\n${$("subtitle").textContent}\nÍndice: ${state.character.score}/100`;try{navigator.share?await navigator.share({title:"Meu personagem",text:t}):(await navigator.clipboard.writeText(t),alert("Ficha copiada!"))}catch(e){}};show();renderSaved();
+</script></body></html>
