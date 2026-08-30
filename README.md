@@ -1,12 +1,26 @@
-# Character Roulette V5
+# Roleta da Vida — V6
 
-Versão mobile minimalista com roleta circular real.
-
-## Correção principal
-A roleta agora usa setores matemáticos de uma conic-gradient e o resultado é escolhido por índice aleatório uniforme. O texto de cada opção é posicionado sobre o seu setor. Assim, o giro não fica preso ao primeiro nome.
-
-## Regra
-Cada entrada dentro de uma categoria possui a mesma probabilidade. A roleta não usa raridade para aumentar ou diminuir a chance.
+## Ideia
+A roleta é deliberadamente minimalista. Ela não imprime os nomes das milhares de possibilidades na roda: os dados ficam na biblioteca e o ponteiro representa apenas o sorteio.
 
 ## Fluxo
-Raça → título → idade → força/durabilidade → velocidade → inteligência → combate → poderes? → poder (se sim) → arma → sorte → fraqueza → potencial → ficha final.
+Raça → Título → Idade → Força e resistência → Velocidade → Inteligência → Combate → Possui poderes? → Poder (se sim) → Arma → ficha final.
+
+## Aleatoriedade
+Cada entrada da categoria escolhida recebe peso 1. A escolha é feita com `Math.floor(Math.random() * list.length)`. A animação então gira até a posição correspondente.
+
+## Biblioteca
+A V6 separa:
+- `library.js`: biblioteca local, referências de sistemas de poder e expansão procedural;
+- `sources.js`: conectores opcionais para Jikan, MediaWiki/Wikipedia e Open Library;
+- `app.js`: motor;
+- `style.css`: interface.
+
+A web não oferece uma biblioteca universal e infinita de toda a ficção. Por isso a arquitetura usa biblioteca local + expansão procedural + fontes externas opcionais, sem fazer o jogo depender da internet.
+
+Jikan documenta endpoints para personagens de anime/mangá.
+MediaWiki REST permite pesquisa de páginas.
+Open Library oferece APIs de busca de obras/livros e recomenda cache/uso de baixa frequência.
+
+## Nota sobre referências
+Nomes de sistemas, espécies e conceitos de obras podem aparecer como referências culturais; o jogo não baixa obras protegidas nem depende de copiar textos de personagens.

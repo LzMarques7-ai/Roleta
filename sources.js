@@ -1,26 +1,55 @@
-const SOURCES = {
-  animeCharacters: {
-    name: "Anime Character Offline Database",
-    url: "https://github.com/arda-/anime-character-offline-database",
-    raw: "https://raw.githubusercontent.com/arda-/anime-character-offline-database/prod/latest/characters.min.json",
-    license: "ODbL 1.0 + DbCL 1.0",
-    count: 12345
+/*
+  FONTES EXTERNAS OPCIONAIS
+  A V6 não depende delas para funcionar.
+  Jikan oferece dados de personagens de anime/mangá.
+  MediaWiki permite pesquisas em wikis/Wikipedia.
+  Open Library oferece busca de obras/livros.
+*/
+const SOURCES={
+  async jikanCharacters(pages=4){
+    const out=[];
+    for(let page=1;page<=pages;page++){
+      try{
+        const r=await fetch(`https://api.jikan.moe/v4/characters?page=${page}&limit=25`);
+        if(!r.ok) break;
+        const j=await r.json();
+        for(const x of j.data||[]) if(x.name) out.push(x.name);
+        await new Promise(r=>setTimeout(r,350));
+      }catch(e){break}
+    }
+    return [...new Set(out)];
   },
-  superheroes: {
-    name: "Superhero API (akabab)",
-    url: "https://github.com/akabab/superhero-api",
-    raw: "https://raw.githubusercontent.com/akabab/superhero-api/master/api/all.json",
-    license: "MIT",
-    count: 731
+  async mediaWikiSearch(q="fictional character",limit=50){
+    try{
+      const u=`https://en.wikipedia.org/w/rest.php/v1/search/page?q=${encodeURIComponent(q)}&limit=${limit}`;
+      const r=await fetch(u,{headers:{"Api-User-Agent":"Roleta-da-Vida/6.0"}});
+      if(!r.ok) return [];
+      const j=await r.json();
+      return (j.pages||[]).map(x=>x.title).filter(Boolean);
+    }catch(e){return []}
   },
-  jikan: {
-    name: "Jikan / MyAnimeList",
-    url: "https://docs.jikan.moe/",
-    role: "API para expansão sob demanda; não é baixada inteira automaticamente."
-  },
-  tmdb: {
-    name: "TMDB",
-    url: "https://developer.themoviedb.org/",
-    role: "API para filmes/séries; exige chave e aceitação dos termos."
+  async openLibrarySearch(q="fantasy character",limit=50){
+    try{
+      const u=`https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&limit=${limit}`;
+      const r=await fetch(u);
+      if(!r.ok) return [];
+      const j=await r.json();
+      return (j.docs||[]).map(x=>x.title).filter(Boolean);
+    }catch(e){return []}
   }
 };
+async function hydrateReferencePool(){
+  const tasks=[
+    SOURCES.jikanCharacters(3),
+    SOURCES.mediaWikiSearch("fictional character",40),
+    SOURCES.mediaWikiSearch("anime character",40),
+    SOURCES.mediaWikiSearch("mythological creature",40),
+    SOURCES.openLibrarySearch("fantasy fiction",40)
+  ];
+  try{
+    const [jikan,w1,w2,w3,books]=await Promise.all(tasks);
+    REMOTE_LIBRARY.characters=[...new Set([...jikan,...w1,...w2,...w3])];
+    REMOTE_LIBRARY.works=[...new Set(books)];
+  }catch(e){}
+  window.dispatchEvent(new CustomEvent("referencepoolready"));
+}
