@@ -1,39 +1,179 @@
-/* ROULETA DA VIDA V7 — biblioteca local
-   As listas são uniformes: não há peso escondido de raridade.
-   A raridade nasce das consequências do resultado, não da chance de cair.
+/* ROULETA DA VIDA V8 — biblioteca local-first.
+   As opções do sorteio têm chance uniforme.
+   As referências são conceitos/escalas presentes em mitologia, literatura,
+   cinema, séries, quadrinhos, jogos, anime e mangá. Não há raridade escondida.
 */
 const LIBRARY={
  races:[
-  ['Humano',0],['Elfo',{'Inteligência':5,'Velocidade':5}],['Elfo Negro',{'Inteligência':7,'Combate':4}],['Anão',{'Força':8,'Resistência':10,'Velocidade':-4}],['Orc',{'Força':14,'Resistência':8,'Inteligência':-5}],['Goblin',{'Velocidade':7,'Inteligência':2}],['Troll',{'Força':18,'Resistência':20,'Velocidade':-10}],['Ogro',{'Força':20,'Resistência':15,'Inteligência':-8}],['Gigante',{'Força':25,'Resistência':22,'Velocidade':-8}],['Fada',{'Velocidade':10,'Inteligência':7,'Força':-8}],['Draconiano',{'Força':12,'Resistência':12,'Poder':8}],['Dragão',{'Força':28,'Resistência':28,'Poder':25,'Velocidade':8}],['Vampiro',{'Velocidade':12,'Inteligência':10,'Poder':18,'Resistência':8}],['Lobisomem',{'Força':20,'Velocidade':15,'Resistência':18}],['Demônio',{'Força':18,'Resistência':16,'Poder':22}],['Anjo',{'Velocidade':12,'Inteligência':12,'Poder':25}],['Serafim',{'Inteligência':18,'Poder':32,'Resistência':18}],['Semideus',{'Força':25,'Resistência':25,'Poder':30}],['Deus',{'Força':40,'Resistência':40,'Poder':50,'Inteligência':30}],['Espírito',{'Poder':16,'Resistência':8}],['Fantasma',{'Poder':18,'Velocidade':8,'Força':-8}],['Yokai',{'Poder':14,'Velocidade':7}],['Kitsune',{'Inteligência':12,'Poder':18,'Velocidade':8}],['Oni',{'Força':22,'Resistência':18,'Poder':12}],['Shinigami',{'Velocidade':15,'Combate':15,'Poder':22}],['Homúnculo',{'Inteligência':7,'Poder':8,'Resistência':7}],['Ciborgue',{'Força':12,'Resistência':15,'Inteligência':8}],['Androide',{'Força':15,'Velocidade':12,'Inteligência':12,'Resistência':12}],['Alienígena',{'Inteligência':8,'Poder':8}],['Mutante',{'Poder':18}],['Metamorfo',{'Velocidade':8,'Poder':15}],['Elemental',{'Poder':28,'Resistência':18}],['Golem',{'Força':25,'Resistência':30,'Velocidade':-20}],['Titã',{'Força':35,'Resistência':35,'Velocidade':-5}],['Entidade Cósmica',{'Poder':45,'Inteligência':28,'Resistência':35}],['Entidade Abstrata',{'Poder':50,'Inteligência':40,'Resistência':20}],['Parasita',{'Poder':10,'Resistência':8}],['Monstro',{'Força':15,'Resistência':15}],['Fera Mágica',{'Força':12,'Velocidade':10,'Poder':12}],['Constructo',{'Resistência':20,'Força':15}],['Celestial',{'Poder':28,'Resistência':22}],['Infernal',{'Poder':24,'Força':15}],['Familiar',{'Poder':12,'Inteligência':6}],['Autômato',{'Resistência':14,'Inteligência':5}],['Sereiano',{'Velocidade':5,'Poder':6}],['Tritão',{'Força':7,'Resistência':8}],['Ninfa',{'Velocidade':8,'Poder':10}],['Dríade',{'Poder':12,'Resistência':7}],['Fênix',{'Poder':30,'Resistência':25,'Velocidade':12}],['Quimera',{'Força':18,'Resistência':18,'Poder':12}],['Dragão Celestial',{'Força':34,'Resistência':35,'Poder':42}],['Dragão Abissal',{'Força':32,'Resistência':32,'Poder':45}],['Demônio Primordial',{'Força':30,'Resistência':28,'Poder':40}],['Espírito Guardião',{'Resistência':20,'Poder':30}],['Devorador de Mundos',{'Força':45,'Resistência':45,'Poder':55}],['Ser Cósmico',{'Poder':48,'Inteligência':32}],['Avatar',{'Poder':35,'Resistência':25}],['Forma de Vida Artificial',{'Inteligência':18,'Resistência':15}],['Saiyajin',{'Força':18,'Velocidade':15,'Combate':15}],['Kryptoniano',{'Força':35,'Velocidade':28,'Resistência':38}],['Viltrumita',{'Força':30,'Velocidade':25,'Resistência':32}],['Asgardiano',{'Força':22,'Resistência':25,'Poder':18}],['Atlante',{'Força':10,'Resistência':12}],['Amazonas',{'Força':10,'Velocidade':8,'Combate':10}],['Metahumano',{'Poder':20}],['Usuário de Nen',{'Combate':12,'Poder':18}],['Usuário de Chakra',{'Velocidade':10,'Combate':12,'Poder':20}],['Shinobi',{'Velocidade':12,'Combate':14}],['Quincy',{'Velocidade':12,'Poder':20}],['Hollow',{'Velocidade':14,'Combate':13,'Poder':22}],['Mago',{'Inteligência':15,'Poder':20}],['Bruxo',{'Inteligência':10,'Poder':22}],['Feiticeiro',{'Inteligência':12,'Poder':24}],['Maldição',{'Poder':25,'Resistência':14}],['Caçador de Demônios',{'Combate':15,'Velocidade':10}],['Ghoul',{'Força':12,'Velocidade':10,'Resistência':12}],['Híbrido Humano-Demônio',{'Força':18,'Velocidade':14,'Poder':20}],['Híbrido Humano-Animal',{'Força':8,'Velocidade':12}],['Híbrido Mágico',{'Poder':18}],['Espécie Sintética',{'Inteligência':15,'Resistência':12}],['Ser de Energia',{'Poder':30,'Resistência':15}],['Ser de Plasma',{'Poder':32,'Velocidade':15}],['Ser de Sombra',{'Velocidade':14,'Poder':25}],['Ser de Luz',{'Velocidade':20,'Poder':28}],['Ser Astral',{'Inteligência':20,'Poder':35}],['Ser Dimensional',{'Poder':40,'Velocidade':20}],['Ser Paradoxal',{'Poder':48,'Inteligência':30}],['Entidade de Sonho',{'Poder':38,'Inteligência':22}],['Entidade de Memória',{'Poder':40,'Inteligência':30}],['Entidade de Conceito',{'Poder':50,'Inteligência':38}],['Avatar Divino',{'Poder':42,'Resistência':30,'Força':25}]
+  ['Humano'],['Elfo'],['Elfo Negro'],['Anão'],['Orc'],['Goblin'],['Troll'],['Ogro'],['Gigante'],['Fada'],['Draconiano'],['Dragão'],['Vampiro'],['Lobisomem'],['Demônio'],['Anjo'],['Serafim'],['Semideus'],['Deus'],['Espírito'],['Fantasma'],['Yōkai'],['Kitsune'],['Oni'],['Shinigami'],['Hollow'],['Quincy'],['Homúnculo'],['Ciborgue'],['Androide'],['Alienígena'],['Mutante'],['Metamorfo'],['Elemental'],['Golem'],['Titã'],['Fênix'],['Quimera'],['Centauro'],['Sereia'],['Tritão'],['Ninfa'],['Dríade'],['Minotauro'],['Medusa'],['Sátiro'],['Naga'],['Djinn'],['Ifrit'],['Jinn'],['Rakshasa'],['Asura'],['Rakshasa'],['Valkyrie'],['Gigante de Gelo'],['Gigante de Fogo'],['Anão Negro'],['Fauno'],['Duende'],['Banshee'],['Dullahan'],['Leprechaun'],['Kelpie'],['Grifo'],['Harpia'],['Súcubo'],['Íncubo'],['Ghoul'],['Kaiju'],['Saiyajin'],['Namekuseijin'],['Kryptoniano'],['Viltrumita'],['Asgardiano'],['Atlante'],['Amazonas'],['Metahumano'],['Inumano'],['Eternos'],['Celestial'],['Symbiote'],['Guardião de Oa'],['Kree'],['Skrull'],['Twi’lek'],['Wookiee'],['Vulcano'],['Klingon'],['Time Lord'],['Dalek'],['Cyberman'],['Replicante'],['Cylon'],['Predador'],['Zerg'],['Protoss'],['Terrano'],['Esper'],['Psíquico'],
  ],
  titles:[
-  ['Ninguém'],['Camponês'],['Artesão'],['Mercador'],['Viajante'],['Explorador'],['Caçador'],['Aventureiro'],['Guarda'],['Soldado'],['Cavaleiro'],['Mercenário'],['Ladrão'],['Assassino'],['Espião'],['Batedor'],['Monge'],['Sacerdote'],['Curandeiro'],['Alquimista'],['Mago',{'Inteligência':5,'Poder':5}],['Feiticeiro',{'Poder':7}],['Invocador',{'Poder':8}],['Necromante',{'Poder':10}],['Duelista',{'Combate':8}],['Espadachim',{'Combate':7}],['Arqueiro',{'Velocidade':4,'Combate':5}],['Capitão',{'Combate':6}],['Comandante',{'Combate':9,'Inteligência':5}],['General',{'Combate':12,'Inteligência':10}],['Almirante',{'Inteligência':8}],['Rei',{'Inteligência':8}],['Rainha',{'Inteligência':8}],['Príncipe',{'Inteligência':4}],['Princesa',{'Inteligência':4}],['Imperador',{'Inteligência':12}],['Imperatriz',{'Inteligência':12}],['Duque',{'Inteligência':6}],['Soberano',{'Inteligência':10,'Poder':5}],['Campeão',{'Combate':12}],['Herói',{'Combate':10}],['Anti-Herói',{'Combate':10}],['Vilão',{'Combate':9,'Poder':6}],['Senhor da Guerra',{'Força':10,'Combate':14}],['Lorde Demônio',{'Poder':20,'Força':10}],['Profeta',{'Inteligência':12,'Poder':10}],['Oráculo',{'Inteligência':18,'Poder':10}],['Guardião',{'Resistência':10,'Combate':8}],['Arauto',{'Poder':12}],['Executor',{'Combate':12}],['Escolhido',{'Poder':15}],['Reencarnado',{'Poder':10}],['Avatar',{'Poder':18}],['Mestre',{'Combate':15,'Inteligência':8}],['Lenda',{'Combate':18,'Poder':10}],['Monarca Eterno',{'Resistência':18,'Inteligência':12}],['Soberano Celestial',{'Poder':25,'Inteligência':15}],['Soberano Abissal',{'Poder':28,'Força':12}],['Deus Vivo',{'Poder':35,'Resistência':20}],['Entidade Suprema',{'Poder':45,'Inteligência':25}],['Portador da Relíquia',{'Poder':12}],['Mestre de Guilda',{'Inteligência':8}],['Líder de Clã',{'Combate':6,'Inteligência':6}],['Comandante de Esquadrão',{'Combate':10}],['Agente Secreto',{'Velocidade':6,'Inteligência':8}],['Detetive',{'Inteligência':12}],['Cientista',{'Inteligência':15}],['Engenheiro',{'Inteligência':10}],['Inventor',{'Inteligência':12}],['Piloto',{'Velocidade':5}],['Professor',{'Inteligência':14}],['Estudante'],['Atleta',{'Força':6,'Velocidade':7}],['Gladiador',{'Força':8,'Combate':12}],['Campeão Mundial',{'Combate':16}],['Mestre de Artes Marciais',{'Combate':18}],['Guardião de Portal',{'Poder':18}],['Juiz',{'Inteligência':8}],['Carrasco',{'Combate':12}],['Soberano do Submundo',{'Poder':22,'Inteligência':10}],['Regente',{'Inteligência':12}],['Fundador',{'Inteligência':10}],['Conquistador',{'Força':10,'Combate':12}],['Libertador',{'Combate':8}],['Rei dos Monstros',{'Força':22,'Poder':20}],['Imperador Galáctico',{'Inteligência':20,'Poder':30}],['Arauto do Fim',{'Poder':32}]
+  ['Ninguém'],['Camponês'],['Artesão'],['Mercador'],['Viajante'],['Explorador'],['Caçador'],['Aventureiro'],['Guarda'],['Soldado'],['Cavaleiro'],['Mercenário'],['Ladrão'],['Assassino'],['Espião'],['Batedor'],['Monge'],['Sacerdote'],['Curandeiro'],['Alquimista'],['Mago'],['Feiticeiro'],['Invocador'],['Necromante'],['Duelista'],['Espadachim'],['Arqueiro'],['Capitão'],['Comandante'],['General'],['Almirante'],['Rei'],['Rainha'],['Príncipe'],['Princesa'],['Imperador'],['Imperatriz'],['Duque'],['Soberano'],['Campeão'],['Herói'],['Anti-herói'],['Vilão'],['Senhor da Guerra'],['Lorde Demônio'],['Profeta'],['Oráculo'],['Guardião'],['Arauto'],['Executor'],['Escolhido'],['Reencarnado'],['Avatar'],['Mestre'],['Lenda'],['Monarca'],['Soberano Celestial'],['Soberano Abissal'],['Deus Vivo'],['Entidade Suprema'],['Portador da Relíquia'],['Mestre de Guilda'],['Líder de Clã'],['Comandante de Esquadrão'],['Agente Secreto'],['Detetive'],['Cientista'],['Engenheiro'],['Inventor'],['Piloto'],['Professor'],['Estudante'],['Atleta'],['Gladiador'],['Campeão Mundial'],['Mestre de Artes Marciais'],['Juiz'],['Carrasco'],['Regente'],['Fundador'],['Conquistador'],['Libertador'],['Rei dos Monstros'],['Imperador Galáctico'],['Comandante Supremo'],['Guardião de Portal'],['Mestre de Espadas'],['Mestre de Magia'],['Mestre de Nen'],['Mestre de Chakra'],['Mestre de Ki'],['Mestre de Alquimia']
  ],
  ages:[
-  ['Recém-nascido',-25],['1 ano',-22],['3 anos',-18],['5 anos',-15],['8 anos',-10],['10 anos',-8],['12 anos',-5],['13 anos',-3],['15 anos',0],['16 anos',1],['17 anos',2],['18 anos',3],['20 anos',5],['21 anos',5],['25 anos',7],['30 anos',8],['35 anos',7],['40 anos',6],['50 anos',4],['60 anos',1],['70 anos',-2],['80 anos',-5],['100 anos',5],['150 anos',8],['300 anos',12],['500 anos',15],['1.000 anos',18],['5.000 anos',22],['10.000 anos',25],['100.000 anos',30],['1 milhão de anos',35],['Idade desconhecida',8],['Imortal — aparência infantil',15],['Imortal — aparência jovem',22],['Imortal — aparência adulta',25],['Imortal — aparência idosa',18],['Existe fora do tempo',40]
- ].map(([name,v])=>({name,value:50+v,effects:{}})),
- physical:[['Extremamente fraco',5],['Muito fraco',12],['Fraco',20],['Abaixo da média',32],['Comum',45],['Bem condicionado',55],['Atlético',62],['Forte',70],['Muito forte',78],['Excepcionalmente forte',84],['Sobre-humano',90],['Monstruoso',94],['Colossal',96],['Titânico',98],['Divino',99],['Cósmico',100],['Transcendente',100],['Sem limite conhecido',100]].map(([name,value])=>({name,value,effects:{}})),
- speed:[['Muito lento',5],['Lento',15],['Comum',35],['Ágil',50],['Muito ágil',60],['Excepcionalmente rápido',70],['Supersônico',78],['Hipersônico',84],['Relâmpago em combate',88],['Próximo da velocidade da luz',94],['Velocidade da luz',97],['Além da luz',99],['Instantâneo em curtas distâncias',99],['Teleporte de curta distância',95],['Teleporte de longa distância',98],['Movimento instantâneo',100],['Velocidade temporal',100],['Movimento fora do tempo',100],['Velocidade conceitual',100],['Sem limite conhecido',100]].map(([name,value])=>({name,value,effects:{}})),
- intelligence:[['Instintivo',5],['Muito limitado',12],['Limitado',20],['Abaixo da média',32],['Comum',45],['Perspicaz',55],['Inteligente',65],['Muito inteligente',72],['Gênio',80],['Gênio excepcional',86],['Mente estratégica',88],['Intelecto extraordinário',92],['Intelecto sobre-humano',95],['Mente de nível planetário',97],['Mente de nível estelar',98],['Mente de nível galáctico',99],['Mente de nível universal',100],['Conhecimento quase absoluto',100],['Onisciência parcial',100],['Onisciência',100],['Consciência além da lógica',100]].map(([name,value])=>({name,value,effects:{}})),
- combat:[['Nunca lutou',5],['Sem experiência',12],['Amador',22],['Briga de rua',32],['Treinado',45],['Combatente competente',55],['Veterano',65],['Especialista',74],['Mestre marcial',82],['Mestre de armas',86],['Especialista em múltiplas armas',89],['Assassino experiente',91],['Lenda viva',94],['Mestre absoluto',97],['Predador de elite',98],['Guerreiro divino',99],['Combatente transcendental',100],['Impossível de medir',100]].map(([name,value])=>({name,value,effects:{}})),
- hasPower:[{name:'Não',effects:{}},{name:'Sim',effects:{Poder:10}}],
+  ['Recém-nascido',5],['1 ano',8],['3 anos',10],['5 anos',12],['8 anos',15],['10 anos',17],['12 anos',19],['13 anos',20],['15 anos',25],['16 anos',27],['17 anos',29],['18 anos',32],['20 anos',35],['21 anos',36],['25 anos',40],['30 anos',45],['35 anos',48],['40 anos',50],['50 anos',54],['60 anos',56],['70 anos',58],['80 anos',60],['100 anos',62],['150 anos',65],['300 anos',70],['500 anos',74],['1.000 anos',78],['5.000 anos',82],['10.000 anos',86],['100.000 anos',90],['1 milhão de anos',94],['Idade desconhecida',55],['Imortal — aparência infantil',60],['Imortal — aparência jovem',72],['Imortal — aparência adulta',78],['Imortal — aparência idosa',68],['Existe fora do tempo',100],['Nasceu ontem',8],['Mais velho que a própria civilização',96]
+ ].map(x=>({name:x[0],value:x[1]})),
+ physical:[
+  ['Extremamente fraco',5],['Muito fraco',12],['Fraco',20],['Abaixo da média',32],['Comum',45],['Bem condicionado',55],['Atlético',62],['Forte',70],['Muito forte',78],['Excepcionalmente forte',84],['Sobre-humano',90],['Monstruoso',94],['Colossal',96],['Titânico',98],['Divino',99],['Cósmico',100],['Transcendente',100],['Sem limite conhecido',100]
+ ].map(x=>({name:x[0],value:x[1]})),
+ speed:[
+  ['Muito lento',5],['Lento',15],['Comum',35],['Ágil',50],['Muito ágil',60],['Excepcionalmente rápido',70],['Supersônico',78],['Hipersônico',84],['Velocidade de relâmpago',88],['Próximo da velocidade da luz',94],['Velocidade da luz',97],['Além da luz',99],['Movimento instantâneo',100],['Teleporte de curta distância',95],['Teleporte de longa distância',98],['Movimento temporal',100],['Velocidade fora do tempo',100],['Velocidade conceitual',100],['Parada temporal própria',98],['Deslocamento dimensional',100]
+ ].map(x=>({name:x[0],value:x[1]})),
+ intelligence:[
+  ['Instintivo',5],['Muito limitado',12],['Limitado',20],['Abaixo da média',32],['Comum',45],['Perspicaz',55],['Inteligente',65],['Muito inteligente',72],['Gênio',80],['Gênio excepcional',86],['Mente estratégica',88],['Intelecto extraordinário',92],['Intelecto sobre-humano',95],['Mente de nível planetário',97],['Mente de nível estelar',98],['Mente de nível galáctico',99],['Mente de nível universal',100],['Conhecimento quase absoluto',100],['Onisciência parcial',100],['Onisciência',100]
+ ].map(x=>({name:x[0],value:x[1]})),
+ combat:[
+  ['Nunca lutou',5],['Sem experiência',12],['Amador',22],['Briga de rua',32],['Treinado',45],['Combatente competente',55],['Veterano',65],['Especialista',74],['Mestre marcial',82],['Mestre de armas',86],['Especialista em múltiplas armas',89],['Assassino experiente',91],['Lenda viva',94],['Mestre absoluto',97],['Predador de elite',98],['Guerreiro divino',99],['Combatente transcendental',100],['Impossível de medir',100]
+ ].map(x=>({name:x[0],value:x[1]})),
+ hasPower:[{name:'Não'},{name:'Sim'}],
  weapons:[
-  ['Nenhuma'],['Punhos',{'Combate':2}],['Garras',{'Combate':3}],['Adagas',{'Velocidade':3,'Combate':3}],['Espada curta',{'Combate':4}],['Espada longa',{'Combate':5}],['Katana',{'Combate':6,'Velocidade':2}],['Nodachi',{'Força':4,'Combate':5}],['Duas espadas',{'Combate':8,'Velocidade':3}],['Espada pesada',{'Força':7,'Combate':6,'Velocidade':-3}],['Espada colossal',{'Força':10,'Combate':8,'Velocidade':-8}],['Lança',{'Combate':4}],['Tridente',{'Combate':5}],['Alabarda',{'Força':5,'Combate':6}],['Machado',{'Força':5,'Combate':5}],['Martelo',{'Força':7,'Combate':5}],['Arco',{'Velocidade':4,'Combate':4}],['Arco longo',{'Velocidade':5,'Combate':6}],['Besta',{'Combate':5}],['Pistola',{'Combate':4}],['Duas pistolas',{'Combate':6}],['Rifle',{'Combate':6}],['Espingarda',{'Combate':7}],['Arma de energia',{'Poder':8}],['Canhão',{'Poder':12}],['Cajado',{'Poder':8,'Inteligência':4}],['Varinha',{'Poder':10,'Inteligência':5}],['Grimório',{'Poder':12,'Inteligência':8}],['Foice',{'Combate':6}],['Foice da alma',{'Combate':8,'Poder':12}],['Corrente',{'Combate':5}],['Chicote',{'Combate':4}],['Lâmina oculta',{'Velocidade':6,'Combate':7}],['Arma viva',{'Poder':15,'Combate':6}],['Arma amaldiçoada',{'Poder':16}],['Arma sagrada',{'Poder':18}],['Arma divina',{'Poder':25}],['Arma cósmica',{'Poder':35}],['Arma dimensional',{'Poder':32,'Velocidade':8}],['Relíquia ancestral',{'Poder':20}],['Artefato desconhecido',{'Poder':18}],['Arma que muda de forma',{'Poder':15,'Combate':8}],['Arma que absorve poderes',{'Poder':25}],['Arma que manipula a realidade',{'Poder':40}],['Arma de fogo',{'Combate':6}],['Arma de plasma',{'Poder':14}],['Arma psíquica',{'Poder':16,'Inteligência':5}],['Arma espiritual',{'Poder':18}],['Arma feita de energia',{'Poder':12}],['Arma que retorna ao dono',{'Combate':4}],['Arma que cresce com o usuário',{'Poder':18}],['Arma ligada à alma',{'Poder':20}]
- ].map(([name,effects={}])=>({name,effects}))
+  ['Nenhuma'],['Punhos'],['Garras'],['Adagas'],['Espada curta'],['Espada longa'],['Katana'],['Nodachi'],['Duas espadas'],['Espada pesada'],['Espada colossal'],['Florete'],['Rapieira'],['Sabre'],['Lança'],['Alabarda'],['Foice'],['Martelo de guerra'],['Machado'],['Machado duplo'],['Arco'],['Arco longo'],['Besta'],['Arco de energia'],['Chakram'],['Kunai'],['Shuriken'],['Corrente'],['Chicote'],['Bastão'],['Bo'],['Nunchaku'],['Tonfa'],['Manoplas'],['Escudo'],['Lança e escudo'],['Arma de fogo'],['Revólver'],['Pistola'],['Espingarda'],['Rifle'],['Rifle de energia'],['Canhão'],['Lança-chamas'],['Arma de plasma'],['Sabre de luz'],['Keyblade'],['Buster Sword'],['Mjölnir'],['Stormbreaker'],['Excalibur'],['Masamune'],['Kusanagi'],['Espada de energia'],['Foice espiritual'],['Grimório'],['Cajado'],['Varinha'],['Anel'],['Amuleto'],['Relíquia']
+ ].map(x=>({name:x[0]}))
 };
-function pair(list){return list.map(x=>Array.isArray(x)?{name:x[0],effects:x[1]||{}}:x);}
-LIBRARY.races=pair(LIBRARY.races); LIBRARY.titles=pair(LIBRARY.titles); LIBRARY.physical=pair(LIBRARY.physical); LIBRARY.speed=pair(LIBRARY.speed); LIBRARY.intelligence=pair(LIBRARY.intelligence); LIBRARY.combat=pair(LIBRARY.combat); LIBRARY.weapons=pair(LIBRARY.weapons);
-const POWER_DOMAINS=['fogo','água','gelo','vento','terra','raio','luz','trevas','metal','sangue','plantas','som','gravidade','magnetismo','pressão','calor','frio','energia','matéria','antimatéria','plasma','espaço','tempo','memória','sonhos','alma','vida','morte','probabilidade','sorte','destino','causalidade','realidade','dimensões','leis físicas','leis mágicas','conceitos','existência','informação','emoções','medo','dor','vontade','identidade','nome verdadeiro','linguagem','história','narrativa','distância','movimento','velocidade','massa','entropia','vácuo','sombras','luz solar','energia vital','energia espiritual','energia psíquica'];
-const POWER_ACTIONS=['criação de','controle de','absorção de','conversão de','projeção de','selamento de','amplificação de','anulação de','manipulação de','roubo de','cópia de','inversão de','divisão de','fusão de','transmutação de','negação de','reflexão de','compressão de','expansão de','reescrita de'];
-const POWER_RANGES=['um alvo','uma pessoa','um objeto','uma área pequena','uma casa','um bairro','uma cidade','uma região','um país','um continente','um planeta','um sistema estelar','uma galáxia','um universo','múltiplos universos','uma linha do tempo','todas as linhas do tempo','uma dimensão','múltiplas dimensões','escala conceitual','escala existencial'];
-const POWER_MODIFIERS=['sem custo aparente','com custo físico','com custo mental','exigindo concentração','ativado por emoção','ativado por contato','ativado pela voz','ativado pelo olhar','limitado por tempo','que cresce durante o combate','que se adapta ao inimigo','que fica mais forte após cada uso','que pode ser compartilhado','que pode ser roubado','que pode evoluir','que ignora defesas comuns','que exige um contrato','que exige um sacrifício'];
-const POWER_FOCUSES=['precisão','alcance','força bruta','defesa','controle','versatilidade','velocidade','furtividade','sobrevivência','crescimento'];
-const POWER_EFFECTS={fogo:{Poder:10},água:{Poder:7},gelo:{Poder:8},vento:{Poder:7},terra:{Poder:9},raio:{Poder:11},luz:{Poder:13},trevas:{Poder:14},gravidade:{Poder:20},espaço:{Poder:25},tempo:{Poder:30},realidade:{Poder:40},causalidade:{Poder:42},conceitos:{Poder:45},existência:{Poder:48},narrativa:{Poder:50},morte:{Poder:28},vida:{Poder:24},alma:{Poder:26},probabilidade:{Poder:30},destino:{Poder:32},dimensões:{Poder:30}};
-const NAME_A=['Aren','Kael','Ren','Sora','Nox','Kairo','Orin','Aster','Riven','Noa','Mira','Vey','Lio','Rin','Eli','Dante','Luna','Akio','Yuri','Kian','Mako','Iris','Zane','Aya','Theo','Nara','Ryo','Eira','Vaal','Ciel','Riven','Milo'];
-const NAME_B=['Valen','Voss','Kane','Ardent','Zenith','Noctis','Solari','Raven','Kuro','Vale','Dusk','Rei','Mori','Vega','Drake','Aster','Nyx','Kael','Frost','Varen','Sable','Rune','Auron','Kestrel'];
-const ALIGNMENTS=['Leal e bondoso','Leal e neutro','Leal e cruel','Neutro e bondoso','Neutro','Neutro e cruel','Caótico e bondoso','Caótico e neutro','Caótico e cruel'];
-const PERSONALITY_TRAITS=['Protege quem considera família.','Desconfia de promessas fáceis.','Procura provar seu valor.','Mantém a calma quando todos entram em pânico.','Age antes de pensar.','Prefere observar antes de se envolver.','Não suporta ser subestimado.','Tem dificuldade em abandonar alguém.','Transforma curiosidade em obsessão.','Esconde insegurança atrás de confiança.','Leva seus juramentos a sério.','Gosta de testar seus próprios limites.'];
-const IDEALS=['liberdade acima de qualquer autoridade.','poder para nunca mais depender de ninguém.','conhecimento, mesmo quando ele assusta.','proteção dos que não conseguem se defender.','vingança contra quem destruiu seu passado.','equilíbrio entre força e responsabilidade.','glória que sobreviva ao próprio nome.','descobrir até onde sua existência pode chegar.'];
-const FLAWS=['sua ambição quase nunca sabe a hora de parar.','o orgulho o impede de pedir ajuda.','ele guarda rancor por tempo demais.','curiosidade costuma vencer o bom senso.','medo de perder alguém o torna impulsivo.','ele confunde poder com controle.','não aceita facilmente os próprios erros.','sente necessidade de provar que é especial.'];
-const GOALS=['encontrar alguém que desapareceu.','descobrir a origem do próprio poder.','superar o maior guerreiro que já conheceu.','construir um lugar onde ninguém seja perseguido.','descobrir o que existe além do mundo conhecido.','quebrar uma maldição antiga.','reunir uma relíquia perdida.','viver uma vida que não foi escolhida por outros.'];
-const FEARS=['perder o controle quando mais precisar dele.','descobrir que seu maior poder tem um preço.','ser esquecido.','falhar diante de quem confia nele.','descobrir que sua origem é uma mentira.','ficar sozinho.'];
+
+const POWER_ACTIONS=[
+ {name:'Manipulação de',ref:'conceito recorrente em ficção especulativa'},
+ {name:'Controle de',ref:'ficção de superpoderes'},
+ {name:'Criação de',ref:'fantasia e ficção científica'},
+ {name:'Projeção de',ref:'fantasia e quadrinhos'},
+ {name:'Absorção de',ref:'ficção de superpoderes'},
+ {name:'Amplificação de',ref:'anime, mangá e quadrinhos'},
+ {name:'Transmutação de',ref:'alquimia e fantasia'},
+ {name:'Negação de',ref:'ficção de superpoderes'},
+ {name:'Selamento de',ref:'fantasia, anime e mangá'},
+ {name:'Distorção de',ref:'ficção científica e fantasia'},
+ {name:'Percepção de',ref:'ficção especulativa'},
+ {name:'Roubo de',ref:'ficção de superpoderes'},
+ {name:'Invocação de',ref:'fantasia'},
+ {name:'Regeneração por',ref:'fantasia e ficção de superpoderes'},
+ {name:'Conversão de',ref:'ficção científica'},
+ {name:'Anulação de',ref:'ficção de superpoderes'},
+ {name:'Duplicação de',ref:'ficção especulativa'},
+ {name:'Intangibilidade através de',ref:'quadrinhos, anime e ficção científica'},
+ {name:'Existência além de',ref:'cosmologia ficcional'},
+ {name:'Percepção além de',ref:'ficção especulativa'}
+];
+const POWER_DOMAINS=[
+ {name:'tempo',ref:'Doctor Who; Steins;Gate; JoJo; ficção científica'},
+ {name:'espaço',ref:'ficção científica e quadrinhos'},
+ {name:'gravidade',ref:'ficção científica'},
+ {name:'matéria',ref:'alquimia; ficção científica'},
+ {name:'energia',ref:'quadrinhos; anime; ficção científica'},
+ {name:'fogo',ref:'mitologia e fantasia'},
+ {name:'água',ref:'mitologia e fantasia'},
+ {name:'gelo',ref:'mitologia e fantasia'},
+ {name:'vento',ref:'mitologia e fantasia'},
+ {name:'terra',ref:'mitologia e fantasia'},
+ {name:'relâmpago',ref:'mitologia e fantasia'},
+ {name:'luz',ref:'mitologia e religião comparada'},
+ {name:'trevas',ref:'mitologia e fantasia'},
+ {name:'sangue',ref:'fantasia; horror'},
+ {name:'vida',ref:'fantasia'},
+ {name:'morte',ref:'mitologia; fantasia'},
+ {name:'alma',ref:'mitologia; fantasia'},
+ {name:'mente',ref:'ficção de superpoderes'},
+ {name:'memória',ref:'ficção especulativa'},
+ {name:'sonhos',ref:'Sandman; mitologia; fantasia'},
+ {name:'emoções',ref:'ficção de superpoderes'},
+ {name:'som',ref:'ficção de superpoderes'},
+ {name:'vibração',ref:'quadrinhos; ficção científica'},
+ {name:'eletricidade',ref:'ficção científica e super-heróis'},
+ {name:'magnetismo',ref:'quadrinhos; ficção científica'},
+ {name:'metal',ref:'fantasia e super-heróis'},
+ {name:'cristal',ref:'fantasia'},
+ {name:'planta',ref:'fantasia e mitologia'},
+ {name:'veneno',ref:'fantasia; RPGs'},
+ {name:'ácido',ref:'ficção de superpoderes'},
+ {name:'fumaça',ref:'fantasia e quadrinhos'},
+ {name:'areia',ref:'anime e fantasia'},
+ {name:'areia movediça',ref:'fantasia'},
+ {name:'cinzas',ref:'fantasia'},
+ {name:'névoa',ref:'fantasia e horror'},
+ {name:'escuridão',ref:'fantasia e horror'},
+ {name:'gravidade zero',ref:'ficção científica'},
+ {name:'dimensões',ref:'ficção científica e quadrinhos'},
+ {name:'portais',ref:'fantasia e ficção científica'},
+ {name:'probabilidade',ref:'ficção especulativa'},
+ {name:'causalidade',ref:'ficção especulativa'},
+ {name:'destino',ref:'mitologia e fantasia'},
+ {name:'sorte',ref:'mitologia e ficção'},
+ {name:'azar',ref:'ficção de superpoderes'},
+ {name:'conceitos',ref:'fantasia metafísica'},
+ {name:'nomes',ref:'mitologia e fantasia'},
+ {name:'palavras',ref:'fantasia e ficção'},
+ {name:'linguagem',ref:'ficção especulativa'},
+ {name:'verdade',ref:'fantasia metafísica'},
+ {name:'mentira',ref:'ficção especulativa'},
+ {name:'ordem',ref:'fantasia metafísica'},
+ {name:'caos',ref:'mitologia e fantasia'},
+ {name:'realidade',ref:'ficção científica e fantasia'},
+ {name:'ilusão',ref:'fantasia e horror'},
+ {name:'reflexos',ref:'ficção de superpoderes'},
+ {name:'sombras',ref:'fantasia e horror'},
+ {name:'luz solar',ref:'mitologia e fantasia'},
+ {name:'lua',ref:'mitologia e fantasia'},
+ {name:'estrelas',ref:'mitologia e ficção científica'},
+ {name:'cosmos',ref:'ficção científica'},
+ {name:'espaço-tempo',ref:'relatividade e ficção científica'},
+ {name:'calor',ref:'ficção científica'},
+ {name:'frio',ref:'ficção especulativa'},
+ {name:'pressão',ref:'ficção científica'},
+ {name:'densidade',ref:'ficção científica'},
+ {name:'inércia',ref:'ficção científica'},
+ {name:'entropia',ref:'ficção científica'},
+ {name:'radiação',ref:'ficção científica'},
+ {name:'plasma',ref:'ficção científica'},
+ {name:'antimatéria',ref:'ficção científica'},
+ {name:'matéria escura',ref:'ficção científica'},
+ {name:'energia cinética',ref:'ficção científica'},
+ {name:'energia potencial',ref:'ficção científica'},
+ {name:'fronteiras dimensionais',ref:'ficção científica'},
+ {name:'telepatia',ref:'quadrinhos; ficção especulativa'},
+ {name:'telecinese',ref:'quadrinhos; anime; ficção científica'},
+ {name:'precognição',ref:'ficção especulativa'},
+ {name:'clarividência',ref:'folclore e ficção'},
+ {name:'teletransporte',ref:'ficção científica'},
+ {name:'metamorfose',ref:'mitologia e fantasia'},
+ {name:'regeneração',ref:'quadrinhos; horror; fantasia'},
+ {name:'imortalidade',ref:'mitologia e fantasia'},
+ {name:'invulnerabilidade',ref:'mitologia e super-heróis'},
+ {name:'superforça',ref:'quadrinhos e anime'},
+ {name:'supervelocidade',ref:'quadrinhos e anime'},
+ {name:'sentidos',ref:'ficção de superpoderes'},
+ {name:'aura',ref:'anime, mangá e fantasia'},
+ {name:'ki',ref:'Dragon Ball e artes marciais ficcionais'},
+ {name:'chakra',ref:'Naruto e tradições indianas reinterpretadas'},
+ {name:'nen',ref:'Hunter × Hunter'},
+ {name:'reiatsu',ref:'Bleach'},
+ {name:'haki',ref:'One Piece'},
+ {name:'quirk',ref:'My Hero Academia'},
+ {name:'stands',ref:'JoJo’s Bizarre Adventure'},
+ {name:'alquimia',ref:'Fullmetal Alchemist e tradição alquímica'},
+ {name:'magia',ref:'fantasia, RPGs e literatura'},
+ {name:'maldição',ref:'Jujutsu Kaisen e horror'},
+ {name:'fruta do diabo',ref:'One Piece'},
+ {name:'respiração',ref:'Demon Slayer'},
+ {name:'transformação',ref:'anime, mangá e quadrinhos'},
+ {name:'armamento',ref:'fantasia e ficção científica'},
+ {name:'barreira',ref:'fantasia e anime'},
+ {name:'invocação espiritual',ref:'folclore e fantasia'}
+];
+const POWER_MODIFIERS=[
+ {name:'à distância'}, {name:'por contato'}, {name:'em área'}, {name:'de precisão'}, {name:'em cadeia'},
+ {name:'de forma contínua'}, {name:'de forma instantânea'}, {name:'com custo físico'}, {name:'com custo mental'},
+ {name:'através de um objeto'}, {name:'através do próprio corpo'}, {name:'em escala limitada'}, {name:'em escala massiva'},
+ {name:'sob condição específica'}, {name:'de forma inconsciente'}, {name:'após preparação'}, {name:'em estado emocional extremo'},
+ {name:'com risco de retorno'}, {name:'sem controle perfeito'}, {name:'com domínio excepcional'}
+];
+const POWER_EFFECTS={
+ 'tempo':{Poder:28},'espaço':{Poder:28},'gravidade':{Poder:25},'realidade':{Poder:38},'causalidade':{Poder:40},'conceitos':{Poder:42},'destino':{Poder:36},'cosmos':{Poder:35},'antimatéria':{Poder:34},'matéria escura':{Poder:34},'telepatia':{Inteligência:8,Poder:18},'telecinese':{Poder:18},'precognição':{Inteligência:10,Poder:20},'teletransporte':{Velocidade:15,Poder:22},'metamorfose':{Poder:15},'regeneração':{Resistência:20,Poder:15},'imortalidade':{Resistência:35,Poder:18},'invulnerabilidade':{Resistência:40,Poder:22},'superforça':{Força:30,Poder:18},'supervelocidade':{Velocidade:30,Poder:18},'ki':{Força:10,Combate:12,Poder:20},'chakra':{Velocidade:8,Combate:10,Poder:20},'nen':{Combate:12,Inteligência:8,Poder:20},'reiatsu':{Poder:22,Resistência:8},'haki':{Combate:15,Poder:18},'quirk':{Poder:18},'stands':{Combate:10,Poder:25},'alquimia':{Inteligência:12,Poder:20},'magia':{Inteligência:10,Poder:22},'maldição':{Poder:25},'fruta do diabo':{Poder:25},'respiração':{Combate:12,Velocidade:8,Poder:12},'barreira':{Resistência:20,Poder:18}
+};
+
+const NAME_A=['Aki','Aren','Arin','Aya','Cael','Dai','Eli','Eren','Haru','Ilya','Jin','Kai','Kira','Lio','Luan','Mika','Nara','Noa','Rin','Sora','Tao','Yuna','Zane','Ari','Ren','Lena','Mio','Niko','Ryo','Theo','Vera','Zuri'];
+const NAME_B=['n','ra','ki','el','an','or','is','en','a','o','ir','us','ia','on','ei','ar','yn','eo','ai','eth'];
+const ALIGNMENTS=['altruísta','neutro','pragmático','individualista','idealista','ambicioso','honrado','caótico','reservado','vingativo'];
+const PERSONALITY_TRAITS=['observador e desconfiado','impulsivo, mas leal','calmo sob pressão','orgulhoso e competitivo','curioso até o limite','disciplinado e reservado','carismático e imprevisível','compassivo com quem sofre','frio quando precisa decidir','teimoso diante de autoridades','adaptável e difícil de intimidar','idealista, mesmo após perdas'];
+const IDEALS=['proteger quem não consegue se proteger','descobrir a verdade sobre seu passado','superar seu próprio limite','viver sem depender de ninguém','deixar um legado que sobreviva a ele','impedir que o poder caia nas mãos erradas','provar que sua origem não define seu destino','encontrar um lugar onde possa pertencer','vingar uma injustiça antiga','compreender a natureza do próprio poder'];
+const FLAWS=['subestima os próprios limites','tem dificuldade em confiar','confunde orgulho com coragem','carrega culpa por erros antigos','age antes de entender todas as consequências','tem medo de perder o controle','não sabe abandonar uma disputa','guarda ressentimentos por tempo demais','sente necessidade de provar seu valor','evita falar sobre o que realmente sente'];
+const GOALS=['descobrir quem o criou','encontrar uma pessoa desaparecida','dominar completamente sua habilidade','derrubar alguém que controla sua região','proteger sua família','entender a origem de sua espécie','encontrar a verdade por trás de uma guerra','alcançar o maior nível de combate possível','romper uma maldição','construir uma vida que não dependa de seu passado'];
+const FEARS=['perder o controle do próprio poder','ficar sozinho novamente','descobrir que sua vida foi construída sobre uma mentira','tornar-se igual ao inimigo que odeia','falhar quando alguém depender dele','ser lembrado apenas pelos seus erros','perder a própria identidade','descobrir que não existe limite para o que pode fazer'];
