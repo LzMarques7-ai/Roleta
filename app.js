@@ -1,131 +1,87 @@
-/* ROULETA DA VIDA V8 — interface.
-   Um giro por vez. O wheel é visual; o sorteio é feito separadamente com RNG.
-   A interface usa delegação de eventos para não perder botões após re-render.
+/* V8 FINAL — UI robusta para celulares.
+   Canvas responsivo + delegação de eventos + estado único.
 */
-const $=s=>document.querySelector(s);
-const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const STEPS=[
- ['race','Qual sua raça?','races'],
- ['title','Qual seu título?','titles'],
- ['age','Qual sua idade?','ages'],
- ['physical','Força e durabilidade?','physical'],
- ['speed','Velocidade?','speed'],
- ['intelligence','Inteligência?','intelligence'],
- ['combat','Combate?','combat'],
- ['hasPower','Possui poderes?','hasPower'],
- ['power','Qual é o seu poder?','power'],
- ['weapon','Arma?','weapons']
-];
-let state={step:0,picks:[],hasPower:false,rotation:0,spinning:false,spinToken:0};
-
-function activeSteps(){return state.hasPower?STEPS:STEPS.filter(s=>s[0]!=='power')}
-function currentStep(){return activeSteps()[state.step]}
-function visualWheel(canvas,highlight=-1){
-  if(!canvas)return;
-  const rect=canvas.getBoundingClientRect();
-  const dpr=Math.min(window.devicePixelRatio||1,2);
-  const size=Math.max(260,Math.floor(Math.min(rect.width||300,rect.height||300)));
-  if(canvas.width!==size*dpr){canvas.width=size*dpr;canvas.height=size*dpr;}
-  const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,size,size);
-  const cx=size/2,cy=size/2,r=size/2-2,n=60;
-  for(let i=0;i<n;i++){
-    const a=-Math.PI/2+i*(Math.PI*2/n),b=-Math.PI/2+(i+1)*(Math.PI*2/n);
-    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,a,b);ctx.closePath();
-    ctx.fillStyle=i===highlight?'#1b1b1b':(i%2?'#0b0b0b':'#111111');ctx.fill();
-    ctx.strokeStyle='#191919';ctx.lineWidth=1;ctx.stroke();
+(()=>{
+  const $=s=>document.querySelector(s), esc=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const steps=[
+    ["race","Qual sua raça?","race"],["origin","Qual sua origem?","origin"],["appearance","Como você é?","appearance"],
+    ["name","Qual é o seu nome?","name"],["age","Qual sua idade?","age"],["condition","Como é seu corpo?","condition"],
+    ["force","Qual é sua força?","force"],["speed","Qual é sua velocidade?","speed"],["intelligence","Qual é sua inteligência?","intelligence"],
+    ["combat","Como você luta?","combat"],["talent","Qual é seu talento?","talent"],["hasPower","Possui poderes?","hasPower"],
+    ["power","Qual é o seu poder?","power"],["control","Quanto domina isso?","control"],["weapon","Arma ou equipamento?","weapons"],
+    ["potential","Qual é seu potencial?","potential"],["life","Como será sua vida?","life"]
+  ];
+  const state={step:0,picks:{},rotation:0,spinning:false,token:0};
+  const opts=(key)=>{
+    if(key==="race")return (LIBRARY.races||[]).map(RV.norm);
+    if(key==="origin")return RV.fallback.origin.map(x=>({name:x[0],value:x[1]}));
+    if(key==="appearance")return RV.fallback.appearance.map(x=>({name:x[0],value:x[1]}));
+    if(key==="name")return [{name:RV.name()}];
+    if(key==="age")return (LIBRARY.ages||RV.fallback.ages||[]).map(RV.norm);
+    if(key==="condition")return RV.fallback.condition.map(x=>({name:x[0],value:x[1]}));
+    if(key==="force")return RV.fallback.force.map(x=>({name:x[0],value:x[1]}));
+    if(key==="speed")return RV.fallback.speed.map(x=>({name:x[0],value:x[1]}));
+    if(key==="intelligence")return RV.fallback.intelligence.map(x=>({name:x[0],value:x[1]}));
+    if(key==="combat")return RV.fallback.combat.map(x=>({name:x[0],value:x[1]}));
+    if(key==="talent")return RV.fallback.talent.map(x=>({name:x[0],value:x[1]}));
+    if(key==="hasPower")return [{name:"Sim"},{name:"Não"}];
+    if(key==="power")return RV.fallback.powers.map(x=>({name:x[0],value:x[1],ref:x[0].split(" — ").slice(1).join(" — ")}));
+    if(key==="control")return RV.fallback.control.map(x=>({name:x[0],value:x[1]}));
+    if(key==="weapons")return RV.fallback.weapons.map(x=>({name:x[0],value:x[1]}));
+    if(key==="potential")return RV.fallback.potential.map(x=>({name:x[0],value:x[1]}));
+    if(key==="life")return RV.fallback.life.map(x=>({name:x[0],value:x[1]}));
+    return [];
+  };
+  function active(){return steps.filter(s=>s[0]!=="power"||state.picks.hasPower?.name==="Sim")}
+  function drawCanvas(c){
+    const rect=c.getBoundingClientRect(), dpr=Math.min(devicePixelRatio||1,2), size=Math.max(220,Math.floor(Math.min(rect.width,rect.height)));
+    c.width=size*dpr;c.height=size*dpr;const x=c.getContext("2d");x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,size,size);
+    const n=Math.min(72,Math.max(36,Math.floor(size/6))), cx=size/2, cy=size/2, r=size/2-2;
+    for(let i=0;i<n;i++){const a=-Math.PI/2+i*2*Math.PI/n,b=-Math.PI/2+(i+1)*2*Math.PI/n;x.beginPath();x.moveTo(cx,cy);x.arc(cx,cy,r,a,b);x.closePath();x.fillStyle=i%2?"#090909":"#101010";x.fill();x.strokeStyle="#1c1c1c";x.lineWidth=1;x.stroke()}
+    x.beginPath();x.arc(cx,cy,r,0,Math.PI*2);x.strokeStyle="#333";x.lineWidth=1.2;x.stroke();
   }
-  ctx.beginPath();ctx.arc(cx,cy,r-1,0,Math.PI*2);ctx.strokeStyle='#292929';ctx.lineWidth=1;ctx.stroke();
-  ctx.beginPath();ctx.arc(cx,cy,r*.25,0,Math.PI*2);ctx.fillStyle='#000';ctx.fill();ctx.strokeStyle='#222';ctx.stroke();
-}
-function render(){
-  const ss=activeSteps();
-  if(state.step>=ss.length)state.step=ss.length-1;
-  const s=ss[state.step];
-  document.querySelector('#app').innerHTML=`
-   <main class="screen">
-    <header class="topbar"><span>ROULETA DA VIDA</span><span>V8</span></header>
-    <h1>Roleta da vida</h1>
-    <div class="progress">${state.step+1} / ${ss.length}</div>
-    <section class="roulette" aria-label="Roleta de sorteio">
-      <div class="pointer" aria-hidden="true"></div>
-      <canvas id="wheel" class="wheel"></canvas>
-      <button class="spin" data-action="spin" aria-label="Girar a roleta">GIRAR</button>
-    </section>
-    <h2>${esc(s[1])}</h2>
-    <div id="result" class="result" aria-live="polite">—</div>
-   </main>`;
-  visualWheel($('#wheel'));
-}
-function spin(){
-  if(state.spinning)return;
-  const s=currentStep();
-  if(!s)return;
-  const value=drawFor(s[2]);
-  const token=++state.spinToken;state.spinning=true;
-  const wheel=$('#wheel'),button=document.querySelector('[data-action="spin"]');
-  if(!wheel||!button){state.spinning=false;return;}
-  const visualSlot=RNG.int(60);
-  const current=((state.rotation%360)+360)%360;
-  const target=(visualSlot+0.5)*(360/60);
-  let delta=(360-target-current+360)%360;
-  delta+=360*(6+RNG.int(4));
-  state.rotation+=delta;
-  button.disabled=true;button.textContent='…';
-  wheel.style.transform=`rotate(${state.rotation}deg)`;
-  window.setTimeout(()=>{
-    if(token!==state.spinToken)return;
-    state.spinning=false;
-    state.picks.push({key:s[0],question:s[1],value});
-    if(s[0]==='hasPower')state.hasPower=label(value)==='Sim';
-    const result=$('#result');
-    if(result)result.innerHTML=`<strong>${esc(label(value))}</strong><span>resultado</span>`;
-    const next=document.createElement('button');
-    next.className='next';next.dataset.action='next';next.textContent=state.step===activeSteps().length-1?'CRIAR PERSONAGEM':'PRÓXIMO GIRO';
-    result?.after(next);
-  },4600);
-}
-function next(){
-  if(state.spinning)return;
-  if(state.step>=activeSteps().length-1){finish();return}
-  state.step++;render();
-}
-function finish(){
-  const picked=Object.fromEntries(state.picks.map(x=>[x.key,x.value]));
-  const p={...picked,name:makeName(),hasPower:label(picked.hasPower)==='Sim'};
-  if(!p.hasPower)delete p.power;
-  const personality=makePersonality();
-  const profile=deriveStats(p);
-  const story=makeStory(p,personality);
-  const rar=profile.rarity;
-  const statHTML=Object.entries(profile.stats).map(([k,v])=>`<div class="stat"><span>${esc(k)}</span><b>${v}</b><i><em style="width:${v}%"></em></i></div>`).join('');
-  const refs=state.picks.map(x=>{const v=normalizeItem(x.value);return v.ref?`<div class="reference"><span>${esc(x.question)}</span><b>${esc(v.ref)}</b></div>`:''}).join('');
-  document.querySelector('#app').innerHTML=`
-   <main class="screen final-screen" style="--rarity:${rar.color}">
-    <header class="topbar"><span>ROULETA DA VIDA</span><span>V8</span></header>
-    <section class="reveal">
-      <div class="stars" aria-label="${rar.stars} estrelas">${'★'.repeat(rar.stars)}</div>
-      <div class="rarity">${rar.name}</div>
-      <h1>${esc(p.name)}</h1>
-      <p>${esc(label(p.race))} · ${esc(label(p.title))}</p>
-    </section>
-    <section class="stats">${statHTML}</section>
-    <section class="story"><h2>O QUE O LEVOU ATÉ AQUI</h2>${story.map(x=>`<p>${esc(x)}</p>`).join('')}</section>
-    <section class="references"><h2>REFERÊNCIAS</h2>${refs||'<p>Conceitos combinados a partir da biblioteca local.</p>'}</section>
-    <button class="again" data-action="new">NOVO PERSONAGEM</button>
-   </main>`;
-}
-function newCharacter(){
-  state={step:0,picks:[],hasPower:false,rotation:0,spinning:false,spinToken:state.spinToken+1};
-  render();window.scrollTo({top:0,behavior:'instant'});
-}
-document.addEventListener('click',e=>{
-  const action=e.target.closest('[data-action]')?.dataset.action;
-  if(action==='spin')spin();
-  else if(action==='next')next();
-  else if(action==='new')newCharacter();
-});
-let resizeTimer;
-window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>visualWheel($('#wheel')),80)});
-window.addEventListener('pageshow',()=>{if(!state.spinning)render()});
-render();
-if(typeof hydrateReferencePool==='function')hydrateReferencePool();
+  function render(){
+    const a=active();if(state.step>=a.length)state.step=a.length-1;const s=a[state.step];
+    $("#app").innerHTML=`<main class="screen"><header><span>ROULETA DA VIDA</span><span>V8</span></header>
+    <div class="title">Roleta da Vida</div><div class="counter">${state.step+1} / ${a.length}</div>
+    <section class="wheelbox"><div class="pointer"></div><canvas id="wheel"></canvas><button id="spin" data-action="spin">GIRAR</button></section>
+    <h2>${esc(s[1])}</h2><div id="result" class="result">—</div></main>`;
+    drawCanvas($("#wheel"));
+  }
+  function spin(){
+    if(state.spinning)return;const s=active()[state.step];if(!s)return;
+    let value;
+    if(s[0]==="hasPower")value={name:RV.yesPower()?"Sim":"Não"};
+    else if(s[0]==="name")value={name:RV.name()};
+    else value=RV.draw(s[2]);
+    if(s[0]==="power")value=RV.power();
+    const token=++state.token;state.spinning=true;const wheel=$("#wheel"),btn=$("#spin");
+    const slots=48,slot=RV.randomInt(slots),target=(slot+.5)*360/slots,current=((state.rotation%360)+360)%360;
+    let delta=(360-target-current+360)%360;delta+=360*(5+RV.randomInt(4));state.rotation+=delta;
+    btn.disabled=true;btn.textContent="…";wheel.style.transform=`rotate(${state.rotation}deg)`;
+    setTimeout(()=>{if(token!==state.token)return;state.spinning=false;state.picks[s[0]]=RV.norm(value);
+      const r=$("#result");r.innerHTML=`<strong>${esc(RV.norm(value).name)}</strong><small>resultado</small>`;
+      const b=document.createElement("button");b.className="next";b.dataset.action="next";b.textContent=state.step===active().length-1?"REVELAR PERSONAGEM":"PRÓXIMO";r.after(b);
+    },4200);
+  }
+  function next(){if(state.spinning)return;if(state.step>=active().length-1)finish();else{state.step++;render()}}
+  function finish(){
+    const p={...state.picks};p.hasPower=p.hasPower?.name==="Sim";if(!p.hasPower)delete p.power;
+    if(!p.name?.name)p.name={name:RV.name()}; if(p.race){p.race.rank=RV.fallback?({"Humano":1,"Dragão":8,"Ghoul":3,"Saiyajin":7,"Kryptoniano":9,"Deus":10,"Celestial":11}[p.race.name]||3):3}
+    const personality={trait:pick(["reservado","curioso","determinado","orgulhoso","melancólico","impulsivo","calculista","compassivo","ambicioso","desconfiado"]),ideal:pick(["liberdade","conhecimento","proteção","poder","justiça","verdade","independência"]),flaw:pick(["orgulho","impaciência","medo de falhar","desconfiança","teimosia","isolamento"]),goal:pick(["entender sua própria natureza","proteger alguém importante","superar seus próprios limites","encontrar respostas sobre seu passado","viver sem depender de ninguém"]),fear:pick(["perder o controle","ficar sozinho","descobrir uma verdade pior do que imaginava","não alcançar seu potencial"])};
+    const prof=RV.profile(p),rar=prof.rarity, story=STORY_ENGINE.make(p,personality);
+    const rows=Object.entries(prof.labels).map(([k,v])=>`<div class="stat"><span>${k}</span><b>${esc(v?.name||"—")}</b></div>`).join("");
+    const refs=Object.values(p).filter(x=>x?.ref).map(x=>`<p>${esc(x.ref)}</p>`).join("");
+    document.body.className=`rarity-${rar.stars}`;
+    $("#app").innerHTML=`<main class="screen final" style="--rarity:${rar.color}"><header><span>ROULETA DA VIDA</span><span>V8</span></header>
+      <section class="reveal"><div class="stars">${"★".repeat(rar.stars)}</div><div class="rarity-name">${rar.name}</div><div class="name">${esc(p.name.name)}</div><div class="sub">${esc(p.race?.name||"")} · ${esc(p.title?.name||"")}</div></section>
+      <section class="stats">${rows}</section><section class="story"><h3>COMO CHEGOU ATÉ AQUI</h3>${story.map(x=>`<p>${esc(x)}</p>`).join("")}</section>
+      ${refs?`<section class="refs"><h3>REFERÊNCIAS</h3>${refs}</section>`:""}
+      <button class="again" data-action="new">NOVO PERSONAGEM</button></main>`;
+  }
+  function pick(a){return a[RV.randomInt(a.length)]}
+  function fresh(){state.step=0;state.picks={};state.rotation=0;state.spinning=false;state.token++;document.body.className="";render();scrollTo(0,0)}
+  document.addEventListener("click",e=>{const a=e.target.closest("[data-action]")?.dataset.action;if(a==="spin")spin();if(a==="next")next();if(a==="new")fresh()});
+  addEventListener("resize",()=>{const c=$("#wheel");if(c&&!state.spinning)drawCanvas(c)});
+  render();
+})();
