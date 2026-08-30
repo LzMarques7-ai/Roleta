@@ -169,51 +169,129 @@ function refFor(x){
 }
 
 function scoreOf(x){
+  /* O valor numérico continua sendo apenas um sinal de escala.
+     A raridade NÃO é uma soma de "pontos de poder". */
   const n=Number(x?.value);
   if(Number.isFinite(n)) return Math.max(0,Math.min(100,n));
-  return 50;
+
+  const effects=x?.effects||{};
+  const vals=Object.values(effects).map(Number).filter(Number.isFinite);
+  if(vals.length) return Math.max(0,Math.min(100,50+Math.max(...vals)*2));
+  return 45;
 }
 
-/* Raridade é calculada somente depois. Não altera nenhuma probabilidade.
-   O resultado é uma classificação do conjunto, não um peso do sorteio. */
+function itemTier(x){
+  const v=scoreOf(x);
+  if(v<=15) return 0;       // praticamente inútil
+  if(v<=32) return 1;       // fraco
+  if(v<=50) return 2;       // comum
+  if(v<=68) return 3;       // competente
+  if(v<=82) return 4;       // excepcional
+  if(v<=91) return 5;       // sobre-humano
+  if(v<=96) return 6;       // monstruoso
+  if(v<=99) return 7;       // extremo
+  return 8;                 // limite conceitual / absoluto
+}
+
 function calculateRarity(p){
-  const values=[
-    p.race?.rank!=null ? p.race.rank*9.09 : 30,
-    scoreOf(p.condition),scoreOf(p.force),scoreOf(p.speed),
-    scoreOf(p.intelligence),scoreOf(p.combat),scoreOf(p.talent),
-    scoreOf(p.control),scoreOf(p.weapons),scoreOf(p.life)
+  /*
+    V9.1 — classificação por perfil, não por "nota 100".
+
+    O sorteio continua 100% uniforme. A classificação só acontece depois.
+    Em vez de somar atributos, observamos:
+      • o pior lado do personagem;
+      • quantas áreas realmente excepcionais existem;
+      • o teto de poder/raça;
+      • sinergias raras entre resultados;
+      • presença ou ausência de poder.
+
+    Isso permite algo que a versão anterior não fazia bem:
+    um personagem com UM resultado absurdo e várias fraquezas pode ser
+    mediano, enquanto uma combinação consistente de resultados extremos
+    pode alcançar 8–9 estrelas.
+  */
+  const core=[
+    p.force,p.speed,p.intelligence,p.combat,p.talent,p.condition,
+    p.control,p.weapons,p.life
   ];
-  if(p.hasPower?.name==="Sim") values.push(scoreOf(p.power));
-  else values.push(10);
+  if(p.hasPower?.name==='Sim') core.push(p.power);
 
-  const avg=values.reduce((a,b)=>a+b,0)/values.length;
-  const extreme=values.filter(v=>v>=90).length;
-  const rareRef=(refFor(p.race)||refFor(p.power)||refFor(p.weapons))?5:0;
+  const tiers=core.map(itemTier);
+  const extraordinary=tiers.filter(t=>t>=5).length;
+  const extreme=tiers.filter(t=>t>=7).length;
+  const absolute=tiers.filter(t=>t>=8).length;
+  const weak=tiers.filter(t=>t<=1).length;
+  const avg=tiers.length?tiers.reduce((a,b)=>a+b,0)/tiers.length:0;
+  const peak=Math.max(0,...tiers);
 
-  let stars;
-  if(avg<20) stars=1;
-  else if(avg<32) stars=2;
-  else if(avg<44) stars=3;
-  else if(avg<56) stars=4;
-  else if(avg<68) stars=5;
-  else if(avg<78) stars=6;
-  else if(avg<88) stars=7;
-  else if(avg<95) stars=8;
-  else stars=9;
+  const raceTier=itemTier(p.race);
+  const titleTier=itemTier(p.title);
+  const ageTier=itemTier(p.age);
+  const weaponTier=itemTier(p.weapons);
+  const powerTier=p.hasPower?.name==='Sim'?itemTier(p.power):-1;
+  const controlTier=p.hasPower?.name==='Sim'?itemTier(p.control):-1;
 
-  /* Extremes and unusual references can elevate an otherwise middling
-     character, without changing any draw probability. */
-  if(stars<9 && extreme>=4) stars++;
-  if(stars<9 && rareRef && avg>=58) stars++;
-  stars=Math.max(1,Math.min(9,stars));
+  /* "coerência" recompensa um personagem que sustenta seu nível em várias
+     dimensões. Não é média de pontos: é quantidade de áreas que chegaram
+     a determinados patamares. */
+  const breadth=(
+    tiers.filter(t=>t>=4).length +
+    (raceTier>=4?1:0) +
+    (titleTier>=4?1:0)
+  );
+
+  let stars=1;
+
+  // 1–3: personagens realmente comuns/fracos.
+  if(peak>=3 || breadth>=2) stars=2;
+  if(peak>=4 && breadth>=3) stars=3;
+  if((extraordinary>=1 && breadth>=3) || (peak>=5 && breadth>=4)) stars=4;
+
+  // 5–6: claramente excepcionais, mas ainda não "lenda".
+  if(extraordinary>=2 && breadth>=4) stars=5;
+  if((extraordinary>=3 && breadth>=5) || (peak>=6 && breadth>=4)) stars=6;
+
+  // 7: combinação muito acima da média.
+  if((extraordinary>=4 && breadth>=6) || (extreme>=1 && breadth>=5)) stars=7;
+
+  // 8: precisa de múltiplas características extremas ou uma combinação
+  // extremamente rara e coerente.
+  if((extreme>=2 && breadth>=6) ||
+     (absolute>=1 && extraordinary>=3 && breadth>=6) ||
+     (powerTier>=7 && controlTier>=6 && raceTier>=5 && breadth>=5)) stars=8;
+
+  // 9: deliberadamente raro. Um único "deus" não basta.
+  // É necessário um conjunto quase completo de resultados de topo.
+  if((absolute>=2 && extreme>=3 && breadth>=8 && weak<=1) ||
+     (absolute>=1 && extreme>=4 && breadth>=8 && powerTier>=7 && controlTier>=7 && weak===0)){
+    stars=9;
+  }
+
+  /* Um personagem sem poderes não é penalizado duas vezes. Ele simplesmente
+     não recebe os critérios de sinergia sobrenatural. */
+  if(p.hasPower?.name!=='Sim'){
+    stars=Math.min(stars,8);
+  }
 
   const meta=[
-    ["Comum","#777777"],["Incomum","#63d68b"],["Raro","#55a8ff"],
-    ["Épico","#9c6cff"],["Mítico","#ed63d3"],["Lendário","#ffad42"],
-    ["Divino","#fff05c"],["Transcendente","#58e9ff"],["Absoluto","#ffffff"]
+    ['Comum','#8d8d8d'],
+    ['Incomum','#63d68b'],
+    ['Raro','#55a8ff'],
+    ['Épico','#9c6cff'],
+    ['Lendário','#ed63d3'],
+    ['Mítico','#ffad42'],
+    ['Divino','#fff05c'],
+    ['Transcendente','#58e9ff'],
+    ['Absoluto','#ffffff']
   ][stars-1];
 
-  return {stars,name:meta[0],color:meta[1],avg};
+  return {
+    stars,
+    name:meta[0],
+    color:meta[1],
+    avg,
+    profile:{peak,extraordinary,extreme,absolute,weak,breadth,raceTier,titleTier,ageTier,weaponTier,powerTier,controlTier}
+  };
 }
 
 function rarityStars(n){return "★".repeat(n)+"☆".repeat(9-n)}
