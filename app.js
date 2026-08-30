@@ -58,10 +58,11 @@
     const token=++state.token;state.spinning=true;const wheel=$("#wheel"),btn=$("#spin");
     const slots=48,slot=RV.randomInt(slots),target=(slot+.5)*360/slots,current=((state.rotation%360)+360)%360;
     let delta=(360-target-current+360)%360;delta+=360*(5+RV.randomInt(4));state.rotation+=delta;
+    wheel.style.transformOrigin="50% 50%";
     btn.disabled=true;btn.textContent="…";wheel.style.transform=`rotate(${state.rotation}deg)`;
     setTimeout(()=>{if(token!==state.token)return;state.spinning=false;state.picks[s[0]]=RV.norm(value);
       const r=$("#result");r.innerHTML=`<strong>${esc(RV.norm(value).name)}</strong><small>resultado</small>`;
-      const b=document.createElement("button");b.className="next";b.dataset.action="next";b.textContent=state.step===active().length-1?"REVELAR PERSONAGEM":"PRÓXIMO";r.after(b);
+      const b=document.createElement("button");b.className="next";b.type="button";b.dataset.action="next";b.setAttribute("aria-label",state.step===active().length-1?"Revelar personagem":"Próxima rolagem");b.textContent=state.step===active().length-1?"REVELAR PERSONAGEM":"PRÓXIMO";r.after(b);
     },4200);
   }
   function next(){if(state.spinning)return;if(state.step>=active().length-1)finish();else{state.step++;render()}}
@@ -81,7 +82,7 @@
   }
   function pick(a){return a[RV.randomInt(a.length)]}
   function fresh(){state.step=0;state.picks={};state.rotation=0;state.spinning=false;state.token++;document.body.className="";render();scrollTo(0,0)}
-  document.addEventListener("click",e=>{const a=e.target.closest("[data-action]")?.dataset.action;if(a==="spin")spin();if(a==="next")next();if(a==="new")fresh()});
+  document.addEventListener("click",e=>{const el=e.target.closest("[data-action]");if(!el)return;const a=el.dataset.action;if(a==="spin")spin();else if(a==="next")next();else if(a==="new")fresh();});
   addEventListener("resize",()=>{const c=$("#wheel");if(c&&!state.spinning)drawCanvas(c)});
   render();
 })();
