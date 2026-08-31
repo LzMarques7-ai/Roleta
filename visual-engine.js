@@ -1,198 +1,27 @@
-/* ROULETA DA VIDA — VISUAL ENGINE
-   V14 — GPT Image 2 + character-faithful art direction + premium collectible cards.
+/* ROULETA DA VIDA — VISUAL ENGINE V15
+   Arte local, ilimitada e sem login.
+   Gera SVG no próprio navegador a partir da ficha do personagem.
+   Não usa Puter, API key, saldo, créditos ou chamadas externas.
 */
-(() => {
-  "use strict";
-
-  const MODEL = "gpt-image-2";
-  const PROVIDER = null;
-  const MAX_ATTEMPTS = 1;
-  const TIMEOUT_MS = 180000;
-  let activeGeneration = null;
-
-  const rarityDirection = {
-    1:"1-star common collectible. Deliberately simple, restrained composition, natural lighting, minimal effects, clean readable character.",
-    2:"2-star uncommon collectible. Polished but restrained illustration, modest atmosphere, subtle environmental detail.",
-    3:"3-star rare collectible. Strong silhouette, richer materials, controlled cinematic lighting and a meaningful environment.",
-    4:"4-star epic collectible. Cinematic scene, dynamic composition, distinctive lighting and visible personality.",
-    5:"5-star mythic collectible. Premium full-art composition, dramatic perspective, sophisticated lighting, environmental storytelling and distinctive motifs.",
-    6:"6-star legendary collectible. Highly cinematic full-art scene, layered lighting, particles tied to the character, strong depth and premium finish.",
-    7:"7-star divine collectible. Extraordinary cinematic composition, elaborate environment, luminous effects, depth, particles and rare collectible-card presentation.",
-    8:"8-star transcendent collectible. Surreal but coherent scale, intricate environment, advanced lighting, holographic atmosphere, particles and premium visual effects.",
-    9:"9-star absolute chromatic collectible. Spectacular full-art key visual, prismatic/chromatic atmosphere, layered holographic light, intricate particles, impossible cinematic scale, luxurious premium finish."
-  };
-
-  const clean = v => String(v ?? "desconhecido").replace(/\s+/g," ").trim();
-  const val = (p,k) => clean(p?.[k]?.name || p?.[k] || "desconhecido");
-
-  function referenceFor(obj){
-    if(!obj?.name) return "";
-    try{
-      if(typeof window.refFor === "function") return clean(window.refFor(obj) || "");
-    }catch(_){}
-    return clean(obj.ref || "");
-  }
-
-  function refs(p){
-    return [
-      ["race",p.race],["title",p.title],["appearance",p.appearance],
-      ["strength",p.force],["speed",p.speed],["intelligence",p.intelligence],
-      ["combat",p.combat],["talent",p.talent],["power",p.power],
-      ["weapon",p.weapons],["condition",p.condition]
-    ].map(([k,v])=>{
-      const r=referenceFor(v);
-      return `${k}: ${clean(v?.name || v)}${r?` — reference: ${r}`:""}`;
-    }).join("\n");
-  }
-
-  function buildPrompt(p,rarity,story){
-    const stars=Math.max(1,Math.min(9,Number(rarity?.stars)||1));
-    const hasPower=val(p,"hasPower").toLowerCase()==="sim";
-    const origin=(Array.isArray(story)?story:[story]).filter(Boolean)
-      .filter(x=>!String(x).startsWith("###"))
-      .join(" ").replace(/\s+/g," ").slice(0,2200);
-
-    return `ROULETA DA VIDA — OFFICIAL COLLECTIBLE CHARACTER KEY ART
-
-Create the final vertical character illustration for an original collectible card. This is NOT a generic fantasy portrait and NOT a random beautiful person. The character sheet below is the absolute source of truth.
-
-RARITY DIRECTION
-${rarityDirection[stars]}
-
-CHARACTER SHEET
-Name: ${val(p,"name")}
-Race/species: ${val(p,"race")}
-Age: ${val(p,"age")}
-Title: ${val(p,"title")}
-Appearance: ${val(p,"appearance")}
-Condition: ${val(p,"condition")}
-Strength reference: ${val(p,"force")}
-Speed reference: ${val(p,"speed")}
-Intelligence reference: ${val(p,"intelligence")}
-Combat reference: ${val(p,"combat")}
-Talent: ${val(p,"talent")}
-Power: ${hasPower?val(p,"power"):"NONE — this character has no supernatural power"}
-Weapon/equipment: ${val(p,"weapons")}
-
-REFERENCE MAP
-${refs(p)}
-
-ORIGIN STORY CONTEXT
-${origin||"No story context supplied."}
-
-ART DIRECTION
-1. Design the character from the complete sheet before rendering. Every major visual choice must have a reason in the sheet.
-2. Race determines anatomy and species traits. Do not add wings, horns, tails, unusual eyes, glowing skin or other fantasy anatomy unless supported by the race/appearance.
-3. Appearance must be visibly recognizable: face, hair, body, clothing and distinctive traits should follow it.
-4. Title affects wardrobe, status symbols, posture and social presentation.
-5. Strength affects physical presence and believable physique, but do not turn a human reference into a monster unless the sheet supports it.
-6. Speed affects action, pose, motion, perspective and environmental motion. A speed reference such as Flash should create extreme motion; a human-level reference must remain human-scale.
-7. Intelligence affects expression, props, technology, planning cues and tactical composition when appropriate.
-8. Combat affects stance, scars, weapon handling and implied experience.
-9. Talent should have a subtle visual motif when possible.
-10. If a power exists, show its specific nature in action. Do not replace it with generic blue magic.
-11. If there is NO power, do not invent magical aura, energy beams or supernatural effects just to make the image prettier.
-12. The selected weapon/equipment must be recognizable and visually important when one exists.
-13. References are conceptual inspiration only. Do not reproduce copyrighted characters, actors, artworks or logos exactly. Translate the useful visual concept into an original character.
-14. Use varied cinematic compositions: action, environmental portrait, close-up, low angle, high angle, dramatic side composition, movement or quiet scene depending on the character. Do NOT default to a standing character against a generic background.
-15. The environment should communicate who this character is and, when useful, echo the origin story.
-16. Make the image beautiful because of composition, lighting, materials, storytelling and character specificity — not because of generic fantasy effects.
-
-COLLECTION STYLE
-Premium modern trading-card key art. Cohesive house style across the collection: polished digital illustration, strong anatomy, rich materials, cinematic depth, expressive faces, controlled color harmony, sophisticated lighting, deliberate composition. Anime/manga/fantasy/cinematic influences may blend when the references call for them, but the final image must remain original.
-
-RARITY EFFECTS
-The rarity changes spectacle and finish, never the character's identity.
-1–2 stars: simple and clean.
-3–4 stars: richer environment and cinematic lighting.
-5–6 stars: premium full-art feeling, stronger depth, particles and character-specific effects.
-7–8 stars: elaborate cinematic environment, luminous particles, holographic light, layered reflections and premium collectible finish.
-9 stars: chromatic/prismatic lighting, holographic atmosphere, intricate particles, multiple depth layers, spectacular key-art composition and an unmistakably legendary presentation.
-
-HARD NEGATIVES
-No generic fantasy hero. No random armor. No random wings. No random horns. No random glowing eyes. No generic magic aura. No irrelevant weapon. No unexplained futuristic technology. No gender change. Preserve the generated age category. No card frame. No UI. No logo. No watermark. No readable text. No captions. No signature.`;
-  }
-
-  function installCardVisualSystem(){
-    if(document.getElementById("rv-card-v14")) return;
-    const s=document.createElement("style");
-    s.id="rv-card-v14";
-    s.textContent=`
-      .collector-card{position:relative;overflow:hidden;background:radial-gradient(circle at 50% 18%,color-mix(in srgb,var(--rarity),transparent 84%),transparent 45%),linear-gradient(145deg,#090909,#020202 60%,#060606)!important;box-shadow:0 24px 100px color-mix(in srgb,var(--rarity),transparent 62%),inset 0 0 0 1px rgba(255,255,255,.08),inset 0 0 55px color-mix(in srgb,var(--rarity),transparent 90%)!important}
-      .collector-card:before{content:"";position:absolute;inset:6px;border-radius:18px;pointer-events:none;z-index:8;border:1px solid color-mix(in srgb,var(--rarity),transparent 38%);opacity:.8}
-      .collector-card:after{content:"CLASSIFICAÇÃO " attr(data-stars) " / 9";position:absolute;z-index:9;right:12px;top:11px;padding:5px 7px;border:1px solid color-mix(in srgb,var(--rarity),transparent 35%);border-radius:5px;background:rgba(0,0,0,.48);color:var(--rarity);font:900 7px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:.15em;backdrop-filter:blur(6px)}
-      .collector-card .card-content{position:relative;z-index:10;padding:22px 20px 25px!important;background:linear-gradient(to bottom,transparent 0%,rgba(3,3,3,.70) 13%,#030303 31%,#030303)!important}
-      .collector-card .stars{text-shadow:0 0 10px var(--rarity),0 0 28px var(--rarity)!important}
-      .collector-1{filter:saturate(.25) contrast(.95)!important}.collector-2{filter:saturate(.5)!important}.collector-3{filter:saturate(.75)!important}.collector-4{filter:saturate(.95)!important}.collector-5{filter:saturate(1.05) contrast(1.03)!important}.collector-6{filter:saturate(1.12) contrast(1.05)!important}.collector-7{filter:saturate(1.18) contrast(1.07)!important}.collector-8{filter:saturate(1.28) contrast(1.09)!important}.collector-9{filter:saturate(1.4) contrast(1.1) brightness(1.04)!important}
-      .collector-5:before{box-shadow:inset 0 0 40px color-mix(in srgb,var(--rarity),transparent 74%)}
-      .collector-6:before{box-shadow:inset 0 0 55px color-mix(in srgb,var(--rarity),transparent 64%)}
-      .collector-7:before{box-shadow:inset 0 0 70px color-mix(in srgb,var(--rarity),transparent 54%)}
-      .collector-8:before{border-width:2px;box-shadow:inset 0 0 85px color-mix(in srgb,var(--rarity),transparent 45%),0 0 28px color-mix(in srgb,var(--rarity),transparent 52%)}
-      .collector-9:before{border:2px solid transparent;background:linear-gradient(#030303,#030303) padding-box,linear-gradient(120deg,#fff,#7df8ff,#ff66d8,#fff36a,#fff) border-box;box-shadow:inset 0 0 95px rgba(255,255,255,.14),0 0 48px rgba(255,255,255,.3)}
-      .collector-9:after{content:"ABSOLUTO • CHROMATIC • " attr(data-stars) "/9";color:#fff;text-shadow:0 0 12px #fff;background:linear-gradient(100deg,rgba(255,255,255,.18),rgba(255,255,255,.035))}
-      .collector-8 .card-art:before,.collector-9 .card-art:before{content:"";position:absolute;inset:0;pointer-events:none;z-index:5;background:repeating-linear-gradient(125deg,transparent 0 16%,color-mix(in srgb,var(--rarity),transparent 92%) 17%,transparent 19%);mix-blend-mode:screen;opacity:.75}
-      .collector-9 .card-art:before{background:linear-gradient(120deg,transparent 10%,rgba(255,255,255,.28) 24%,transparent 38%,rgba(100,245,255,.22) 51%,transparent 64%,rgba(255,80,210,.22) 77%,transparent 90%);background-size:260% 100%;animation:rvChromaticSweep 3s linear infinite;mix-blend-mode:screen}
-      .collector-7 .card-art:after,.collector-8 .card-art:after,.collector-9 .card-art:after{content:"";position:absolute;inset:0;pointer-events:none;z-index:6;background:radial-gradient(circle at 50% 25%,color-mix(in srgb,var(--rarity),transparent 84%),transparent 58%),linear-gradient(to bottom,transparent 35%,rgba(3,3,3,.72) 100%)}
-      .collector-9 .card-art:after{background:linear-gradient(125deg,transparent 12%,rgba(255,255,255,.11),transparent 34%,rgba(255,70,210,.08),transparent 56%,rgba(80,235,255,.10),transparent 82%)}
-      @keyframes rvChromaticSweep{to{background-position:-260% 0}}
-      @media(max-width:430px){.collector-card:before{inset:5px;border-radius:15px}.collector-card:after{font-size:6px;right:9px;top:8px}.collector-card .card-content{padding:17px 14px 19px!important}}
-      @media(prefers-reduced-motion:reduce){.collector-9 .card-art:before{animation:none}}
-    `;
-    document.head.appendChild(s);
-  }
-
-  const wait=ms=>new Promise(r=>setTimeout(r,ms));
-
-  async function waitForPuter(){
-    const start=Date.now();
-    while(!window.puter?.ai?.txt2img){
-      if(Date.now()-start>20000) throw new Error("PUTER_NOT_READY");
-      await wait(100);
-    }
-    return window.puter;
-  }
-
-  // Puter.js manages authentication for txt2img. Do not force a login or redirect
-  // from the character screen: this keeps the generation flow usable across devices.
-
-  async function withTimeout(promise,ms){
-    let timer;
-    try{return await Promise.race([promise,new Promise((_,rej)=>timer=setTimeout(()=>rej(new Error("IMAGE_TIMEOUT")),ms))])}
-    finally{clearTimeout(timer)}
-  }
-
-  function normalizeImage(result){
-    if(!result) throw new Error("IMAGE_RESULT_EMPTY");
-    // Puter txt2img resolves to an HTMLImageElement according to its API contract.
-    if(typeof HTMLImageElement!=="undefined" && result instanceof HTMLImageElement) return result;
-    if(result?.tagName==="IMG" && typeof result.src==="string") return result;
-    if(typeof result==="string"){const img=new Image();img.src=result;return img}
-    if(typeof result?.src==="string"){const img=new Image();img.src=result.src;return img}
-    if(typeof result?.url==="string"){const img=new Image();img.src=result.url;return img}
-    throw new Error("IMAGE_RESULT_INVALID");
-  }
-
-  async function generateOnce(prompt){
-    const puter=await waitForPuter();
-    const result=await withTimeout(
-      puter.ai.txt2img(prompt,{model:"openai/gpt-image-2",quality:"high",ratio:{w:2,h:3}}),
-      TIMEOUT_MS
-    );
-    return normalizeImage(result);
-  }
-
-  async function generate(p,rarity,story){
-    if(activeGeneration) return activeGeneration;
-    activeGeneration=(async()=>generateOnce(buildPrompt(p,rarity,story)))();
-    try{return await activeGeneration}
-    finally{activeGeneration=null}
-  }
-
-  // Kept for compatibility with older app integrations. No forced auth here.
-  async function generateAfterUserGesture(p,rarity,story){
-    return generate(p,rarity,story);
-  }
-
-  installCardVisualSystem();
-  window.VisualEngine={MODEL,PROVIDER,buildPrompt,generate,generateAfterUserGesture,version:"14.0.0"};
+(()=>{
+'use strict';
+const VERSION='15.0.0',MODEL='local-svg';let active=null;
+const R={1:['COMUM','#8d8d8d'],2:['INCOMUM','#63d68b'],3:['RARO','#55a8ff'],4:['ÉPICO','#9c6cff'],5:['LENDÁRIO','#ed63d3'],6:['MÍTICO','#ffad42'],7:['DIVINO','#fff05c'],8:['TRANSCENDENTE','#58e9ff'],9:['ABSOLUTO','#fff']};
+const v=(p,k)=>String(p?.[k]?.name??p?.[k]??'desconhecido').replace(/\s+/g,' ').trim();
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
+function hash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+function rng(seed){let x=seed||1;return()=>{x^=x<<13;x^=x>>>17;x^=x<<5;return(x>>>0)/4294967296}}
+function pick(a,r){return a[Math.floor(r()*a.length)]}
+function brief(p,rarity){const power=v(p,'hasPower').toLowerCase()==='sim';return{stars:Math.max(1,Math.min(9,Number(rarity?.stars)||1)),name:v(p,'name'),race:v(p,'race'),title:v(p,'title'),appearance:v(p,'appearance'),condition:v(p,'condition'),force:v(p,'force'),speed:v(p,'speed'),intelligence:v(p,'intelligence'),combat:v(p,'combat'),talent:v(p,'talent'),power:power?v(p,'power'):'Nenhum poder',control:power?v(p,'control'):'Sem domínio',weapon:v(p,'weapons'),life:v(p,'life')}}
+function pal(b){const t=(b.race+' '+b.appearance+' '+b.power+' '+b.weapon).toLowerCase();if(/gelo|ice|frio/.test(t))return['#e8fcff','#63dfff','#315e9b'];if(/fogo|inferno|demônio|demon|lava/.test(t))return['#fff0bd','#ff744d','#8f1e2d'];if(/eletric|trovão|raio|lightning/.test(t))return['#fff8a8','#ffe45a','#6e56d8'];if(/água|mar|atlante|sereia|tritão/.test(t))return['#dffcff','#56d9ff','#1951a3'];if(/planta|dríade|floresta|natureza/.test(t))return['#e9ffd9','#72db8b','#1c6b4c'];if(/vamp|sangue|hollow|ghoul/.test(t))return['#ffd7df','#e74c68','#3b1534'];if(/anjo|serafim|deus|celestial|divino/.test(t))return['#fffdf0','#fff05c','#7468cf'];if(/mecân|androide|ciborg|tecnolog|cyber/.test(t))return['#ecf4ff','#72a9ff','#29344f'];if(/yōkai|oni|kitsune|japon/.test(t))return['#ffe3f3','#f46fb4','#512f83'];return['#f1e7d8','#9f86ff','#263b58']}
+function species(b,c){const t=(b.race+' '+b.appearance).toLowerCase();let s='';if(/dragão|draconiano|demon|demônio|oni|minotauro|gigante/.test(t))s+=`<path d="M175 170Q125 95 155 72Q195 115 202 160M337 170Q387 95 357 72Q317 115 310 160" fill="${c[2]}" stroke="${c[1]}" stroke-width="8"/>`;if(/elfo|fada|vamp|yōkai|kitsune|anjo|serafim|twi|vulcano/.test(t))s+=`<path d="M171 203L102 151L164 227M341 203L410 151L348 227" fill="${c[0]}" opacity=".92" stroke="${c[1]}" stroke-width="5"/>`;if(/anjo|serafim|fênix|fada/.test(t))s+=`<g opacity=".75"><path d="M145 320Q42 230 74 135Q148 188 185 270M367 320Q470 230 438 135Q364 188 327 270" fill="none" stroke="${c[0]}" stroke-width="28"/></g>`;if(/vamp|demônio|oni|orc|goblin|troll|orco/.test(t))s+=`<path d="M207 142L218 103L235 146M305 146L322 103L333 142" fill="${c[2]}" stroke="${c[1]}" stroke-width="5"/>`;return s}
+function hair(b,c,r){const t=(b.appearance+' '+b.race).toLowerCase(),a=[`<path d="M170 205Q150 105 256 72Q362 105 342 205Q312 165 281 146Q235 175 170 205Z" fill="${c[2]}" stroke="${c[1]}" stroke-width="6"/>`,`<path d="M165 200Q170 78 256 72Q342 78 347 200L319 157Q287 125 256 145Q218 124 180 158Z" fill="${c[1]}" stroke="${c[2]}" stroke-width="6"/>`,`<path d="M166 202Q143 112 230 67Q319 70 350 174L307 145L283 102L264 145L225 111L205 164Z" fill="${c[2]}" stroke="${c[1]}" stroke-width="6"/>`];let s=pick(a,r);if(/branco|white|prata|silver/.test(t))s=s.replaceAll(c[2],'#eaf6ff');if(/negro|preto|black/.test(t))s=s.replaceAll(c[2],'#171925');return s}
+function weapon(b,c){const t=b.weapon.toLowerCase();if(!b.weapon||/nenhuma|nenhum/.test(t))return'';if(/arco|bow/.test(t))return`<path d="M410 370Q505 250 410 130M414 140V360" fill="none" stroke="${c[0]}" stroke-width="9"/><path d="M414 250L500 190" stroke="${c[1]}" stroke-width="5"/>`;if(/espada|katana|excalibur|sabre|buster|kusanagi|keyblade|stormbreaker|mjöl/.test(t))return`<g transform="rotate(18 410 280)"><path d="M404 120L420 112L427 340L411 350Z" fill="${c[0]}" stroke="${c[1]}" stroke-width="5"/><path d="M385 340H444L430 360H398Z" fill="${c[1]}"/></g>`;if(/lança|spear/.test(t))return`<path d="M420 110L428 400" stroke="${c[0]}" stroke-width="8"/><path d="M405 130L420 82L435 130Z" fill="${c[1]}"/>`;if(/martelo|hammer/.test(t))return`<path d="M418 155V390" stroke="${c[0]}" stroke-width="12"/><rect x="374" y="108" width="88" height="55" rx="10" fill="${c[1]}"/>`;if(/escudo|shield/.test(t))return`<path d="M400 155Q480 175 455 330Q420 365 385 330Q360 175 400 155Z" fill="${c[2]}" stroke="${c[0]}" stroke-width="8"/>`;return`<path d="M410 165L430 380" stroke="${c[0]}" stroke-width="11"/><circle cx="410" cy="150" r="20" fill="${c[1]}"/>`}
+function particles(r,n,c){let s='';for(let i=0;i<10+n*7;i++){const x=25+r()*462,y=35+r()*420,q=.8+r()*3;s+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${q.toFixed(1)}" fill="${c[Math.floor(r()*3)]}" opacity="${(.18+r()*.7).toFixed(2)}"/>`}return s}
+function buildSVG(p,rarity){const b=brief(p,rarity),n=b.stars,m=R[n],r=rng(hash(JSON.stringify(b))),c=pal(b),t=(b.power+' '+b.speed).toLowerCase(),motion=/flash|superman|luz|instant|além da luz|velocidade/.test(t),scale=/colossal|titânico|titã|monstruoso|divino|cósmico/i.test(b.force+' '+b.condition)?1.18:/incapaz|frágil|limitada/i.test(b.force+' '+b.condition)?.82:1,skin=/não humana|pele não|azul|verde|escama/i.test(b.appearance)?c[0]:'#d7b09b',eye=n>=8?'#fff':c[1];const lines=motion?`<g opacity=".35" stroke="${c[0]}" stroke-width="3">${Array.from({length:9},(_,i)=>`<path d="M${30+i*50} ${90+i*28}L${140+i*45} ${60+i*28}"/>`).join('')}</g>`:'';const holo=n>=7?`<path d="M-40 380L560 90" stroke="#fff" stroke-width="18" opacity=".06"/><path d="M-40 420L560 130" stroke="${c[1]}" stroke-width="10" opacity=".08"/>`:'';const chroma=n===9?`<rect width="512" height="768" fill="url(#chrome)" opacity=".15"/>`:'';return`<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1536" viewBox="0 0 512 768"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="${n===9?'#17101e':'#070b12'}"/><stop offset=".52" stop-color="${n===9?'#3c164d':c[2]}"/><stop offset="1" stop-color="#020205"/></linearGradient><radialGradient id="spot"><stop stop-color="${c[0]}" stop-opacity=".42"/><stop offset="1" stop-color="${c[1]}" stop-opacity="0"/></radialGradient><linearGradient id="chrome"><stop stop-color="#fff"/><stop offset=".2" stop-color="#7ff"/><stop offset=".45" stop-color="#f7f"/><stop offset=".7" stop-color="#ff5"/><stop offset="1" stop-color="#fff"/></linearGradient><filter id="blur"><feGaussianBlur stdDeviation="${12+n*2}"/></filter><filter id="glow"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter><linearGradient id="coat" x1="0" y1="0" x2="1" y2="1"><stop stop-color="${c[2]}"/><stop offset=".55" stop-color="#111827"/><stop offset="1" stop-color="${c[1]}"/></linearGradient></defs><rect width="512" height="768" fill="url(#bg)"/><circle cx="256" cy="245" r="210" fill="url(#spot)"/><ellipse cx="256" cy="245" rx="${110+n*10}" ry="${150+n*8}" fill="${c[1]}" opacity="${.08+n*.018}" filter="url(#blur)"/>${n>=5?`<circle cx="256" cy="250" r="${155+n*8}" fill="none" stroke="${c[1]}" stroke-width="${n>=8?4:2}" opacity=".25"/>`:''}${particles(r,n,c)}${lines}${species(b,c)}<path d="M${205-(scale-1)*45} 390Q256 350 ${307+(scale-1)*45} 390L360 650Q256 705 152 650Z" fill="url(#coat)" stroke="${c[1]}" stroke-width="7"/><path d="M205 408Q150 445 130 585M307 408Q362 445 382 585" fill="none" stroke="${c[2]}" stroke-width="${35*scale}" stroke-linecap="round"/><path d="M224 345V410Q256 432 288 410V345" fill="${skin}" stroke="${c[1]}" stroke-width="5"/><path d="M178 190Q178 110 256 105Q334 110 334 190L318 330Q292 372 256 380Q220 372 194 330Z" fill="${skin}" stroke="${c[1]}" stroke-width="7"/>${hair(b,c,r)}<path d="M204 238Q224 224 244 240Q224 257 204 238ZM268 240Q288 224 308 238Q288 257 268 240Z" fill="#111"/><circle cx="226" cy="239" r="6" fill="${eye}" filter="url(#glow)"/><circle cx="286" cy="239" r="6" fill="${eye}" filter="url(#glow)"/><path d="M236 294Q256 305 276 294" fill="none" stroke="#6d4b4b" stroke-width="5" stroke-linecap="round"/>${weapon(b,c)}${n>=6?`<g opacity=".85">${Array.from({length:n+2},(_,i)=>`<path d="M${70+i*42} ${650-(i%3)*12}l4 10 11 1-8 7 2 11-9-6-9 6 2-11-8-7 11-1z" fill="${c[i%3]}"/>`).join('')}</g>`:''}${holo}${chroma}<rect x="16" y="16" width="480" height="736" rx="26" fill="none" stroke="${m[1]}" stroke-width="${n>=9?5:n>=7?3:2}" opacity=".72"/><rect x="30" y="30" width="452" height="708" rx="20" fill="none" stroke="#fff" stroke-opacity=".08"/><g font-family="Arial,sans-serif" fill="#fff"><text x="44" y="70" font-size="13" font-weight="800" letter-spacing="4" opacity=".72">${esc(m[0])}</text><text x="468" y="70" text-anchor="end" font-size="13" font-weight="800">${n}/9</text><text x="256" y="720" text-anchor="middle" font-size="21" font-weight="900">${esc(b.name)}</text><text x="256" y="744" text-anchor="middle" font-size="11" opacity=".72">${esc(b.race)} · ${esc(b.title)}</text></g></svg>`}
+function image(svg){const i=new Image();i.decoding='async';i.alt='Arte do personagem';i.src='data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(svg);return i}
+function install(){if(document.getElementById('rv-card-v15'))return;const s=document.createElement('style');s.id='rv-card-v15';s.textContent='.collector-card .ai-character-art{display:block;width:100%;height:100%;object-fit:cover;object-position:center top}.collector-9 .ai-character-art{filter:saturate(1.25) contrast(1.08)}';document.head.appendChild(s)}
+async function generate(p,rarity,story){if(active)return active;active=(async()=>{const i=image(buildSVG(p,rarity));try{await i.decode?.()}catch(_){}return i})();try{return await active}finally{active=null}}
+async function generateAfterUserGesture(p,rarity,story){return generate(p,rarity,story)}
+install();window.VisualEngine={MODEL,PROVIDER:'local',buildPrompt:()=>'',buildSVG,generate,generateAfterUserGesture,version:VERSION};
 })();
