@@ -1,13 +1,12 @@
-/* ROULETA DA VIDA — V11.1 Visual Engine
-   Puter.js + FLUX Schnell.
-   Robust browser integration: authentication, provider selection,
-   supported image options, retry and safe DOM image normalization.
+/* ROULETA DA VIDA — V11.2 Visual Engine
+   Browser-safe Puter.js + FLUX Schnell integration.
+   Automatic generation uses Puter's documented txt2img flow directly;
+   explicit sign-in is only requested from the user-initiated retry button.
 */
 (() => {
   "use strict";
 
   const MODEL = "black-forest-labs/flux-schnell";
-  const PROVIDER = "replicate-image-generation";
   const MAX_ATTEMPTS = 2;
   const TIMEOUT_MS = 120000;
 
@@ -86,31 +85,15 @@ ORIGIN CONTEXT: ${storyText || "No additional origin context."}
 VISUAL RULES: Keep this character visually consistent with the Roleta da Vida collection. Rarity changes spectacle, lighting, effects and background complexity, but not the fundamental art direction. Preserve the character's race, age and defining appearance. Create an original interpretation; do not reproduce an exact existing character, screenshot, trading card, logo or franchise artwork. Do not place text, names, symbols or UI on the artwork.`;
   }
 
-  function wait(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
+  const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
   async function waitForPuter() {
     const started = Date.now();
     while (!window.puter?.ai?.txt2img) {
-      if (Date.now() - started > 15000) throw new Error("Puter.js não carregou a tempo");
+      if (Date.now() - started > 20000) throw new Error("PUTER_NOT_READY");
       await wait(100);
     }
     return window.puter;
-  }
-
-  async function ensureAuth(allowPopup = false) {
-    const puter = await waitForPuter();
-    if (puter.auth?.isSignedIn?.()) return puter;
-
-    // Preferred path on GitHub Pages: Puter's UI authentication dialog.
-    // It is safer for mobile browsers than trying to create a raw popup.
-    if (allowPopup && puter.ui?.authenticateWithPuter) {
-      await puter.ui.authenticateWithPuter();
-      if (puter.auth?.isSignedIn?.()) return puter;
-    }
-
-    throw new Error("AUTH_REQUIRED");
   }
 
   async function withTimeout(promise, ms) {
@@ -128,7 +111,12 @@ VISUAL RULES: Keep this character visually consistent with the Roleta da Vida co
   }
 
   function normalizeImage(result) {
-    if (result instanceof HTMLImageElement) return result;
+    if (!result) throw new Error("IMAGE_RESULT_EMPTY");
+
+    // Puter normally returns an HTMLImageElement. Avoid instanceof because
+    // cross-realm DOM objects can fail that check on some mobile browsers.
+    if (result.tagName === "IMG" && typeof result.src === "string") return result;
+    if (typeof HTMLImageElement !== "undefined" && result instanceof HTMLImageElement) return result;
 
     if (typeof result === "string") {
       const img = new Image();
@@ -136,13 +124,13 @@ VISUAL RULES: Keep this character visually consistent with the Roleta da Vida co
       return img;
     }
 
-    if (result && typeof result.src === "string") {
+    if (typeof result.src === "string") {
       const img = new Image();
       img.src = result.src;
       return img;
     }
 
-    if (result && typeof result.url === "string") {
+    if (typeof result.url === "string") {
       const img = new Image();
       img.src = result.url;
       return img;
@@ -151,48 +139,46 @@ VISUAL RULES: Keep this character visually consistent with the Roleta da Vida co
     throw new Error("IMAGE_RESULT_INVALID");
   }
 
-  async function generateOnce(prompt) {
-    const puter = await waitForPuter();
-
-    // These are the image options documented for Replicate-backed models.
-    // width/height are intentionally NOT used here; ratio is the supported
-    // cross-provider option for this provider/model.
-    const result = await withTimeout(
-      puter.ai.txt2img(prompt, {
-        provider: PROVIDER,
-        model: MODEL,
-        ratio: { w: 2, h: 3 },
-        steps: 4,
-        output_megapixels: "0.5",
-        response_format: "webp"
-      }),
-      TIMEOUT_MS
-    );
-
-    const image = normalizeImage(result);
+  async function waitForImage(image) {
+    if (image.complete && image.naturalWidth > 0) return image;
     await new Promise((resolve, reject) => {
-      if (image.complete && image.naturalWidth > 0) return resolve();
-      image.onload = resolve;
-      image.onerror = () => reject(new Error("IMAGE_LOAD_FAILED"));
+      const timeout = setTimeout(() => reject(new Error("IMAGE_LOAD_TIMEOUT")), 30000);
+      image.onload = () => { clearTimeout(timeout); resolve(); };
+      image.onerror = () => { clearTimeout(timeout); reject(new Error("IMAGE_LOAD_FAILED")); };
     });
     return image;
   }
 
-  async function generate(p, rarity, story, options = {}) {
+  async function generateOnce(prompt) {
+    const puter = await waitForPuter();
+
+    // Keep the first request deliberately simple. These are the documented
+    // Puter/FLUX Schnell parameters and avoid provider-specific mismatches.
+    const result = await withTimeout(
+      puter.ai.txt2img(prompt, {
+        model: MODEL,
+        ratio: { w: 2, h: 3 },
+        steps: 4
+      }),
+      TIMEOUT_MS
+    );
+
+    return waitForImage(normalizeImage(result));
+  }
+
+  async function generate(p, rarity, story) {
     const prompt = buildPrompt(p, rarity, story);
     let lastError = null;
 
-    // If the visitor is already signed in, this is completely automatic.
-    // If not, the first automatic attempt reports AUTH_REQUIRED rather than
-    // opening a popup that mobile Safari may block.
-    if (!options.skipAuth) await ensureAuth(Boolean(options.userGesture));
-
+    // Important: do NOT preflight authentication here. Puter documents that
+    // website AI calls handle authentication automatically. Preflighting with
+    // a custom auth gate was the source of false AUTH_REQUIRED states.
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
       try {
         return await generateOnce(prompt);
       } catch (err) {
         lastError = err;
-        if (attempt < MAX_ATTEMPTS) await wait(900);
+        if (attempt < MAX_ATTEMPTS) await wait(1000);
       }
     }
 
@@ -200,15 +186,22 @@ VISUAL RULES: Keep this character visually consistent with the Roleta da Vida co
   }
 
   async function generateAfterUserGesture(p, rarity, story) {
-    // This path is used by the retry/activation button. Because it is called
-    // from a real click, authentication UI is allowed by mobile browsers.
-    await ensureAuth(true);
-    return generate(p, rarity, story, { skipAuth: true, userGesture: true });
+    const puter = await waitForPuter();
+
+    // A retry is a real user click, so an explicit sign-in popup is allowed.
+    if (puter.auth?.isSignedIn && !puter.auth.isSignedIn()) {
+      if (typeof puter.auth.signIn === "function") {
+        await puter.auth.signIn();
+      } else if (puter.ui?.authenticateWithPuter) {
+        await puter.ui.authenticateWithPuter();
+      }
+    }
+
+    return generate(p, rarity, story);
   }
 
   window.VisualEngine = {
     MODEL,
-    PROVIDER,
     buildPrompt,
     generate,
     generateAfterUserGesture
