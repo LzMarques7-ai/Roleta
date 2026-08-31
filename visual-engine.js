@@ -1,13 +1,13 @@
 /* ROULETA DA VIDA — VISUAL ENGINE
-   V13 — GPT Image 2 + character-faithful art direction + premium collectible cards.
+   V14 — GPT Image 2 + character-faithful art direction + premium collectible cards.
 */
 (() => {
   "use strict";
 
   const MODEL = "gpt-image-2";
-  const PROVIDER = "openai-image-generation";
+  const PROVIDER = null;
   const MAX_ATTEMPTS = 1;
-  const TIMEOUT_MS = 90000;
+  const TIMEOUT_MS = 180000;
   let activeGeneration = null;
 
   const rarityDirection = {
@@ -114,9 +114,9 @@ No generic fantasy hero. No random armor. No random wings. No random horns. No r
   }
 
   function installCardVisualSystem(){
-    if(document.getElementById("rv-card-v13")) return;
+    if(document.getElementById("rv-card-v14")) return;
     const s=document.createElement("style");
-    s.id="rv-card-v13";
+    s.id="rv-card-v14";
     s.textContent=`
       .collector-card{position:relative;overflow:hidden;background:radial-gradient(circle at 50% 18%,color-mix(in srgb,var(--rarity),transparent 84%),transparent 45%),linear-gradient(145deg,#090909,#020202 60%,#060606)!important;box-shadow:0 24px 100px color-mix(in srgb,var(--rarity),transparent 62%),inset 0 0 0 1px rgba(255,255,255,.08),inset 0 0 55px color-mix(in srgb,var(--rarity),transparent 90%)!important}
       .collector-card:before{content:"";position:absolute;inset:6px;border-radius:18px;pointer-events:none;z-index:8;border:1px solid color-mix(in srgb,var(--rarity),transparent 38%);opacity:.8}
@@ -152,27 +152,8 @@ No generic fantasy hero. No random armor. No random wings. No random horns. No r
     return window.puter;
   }
 
-  function isAuthenticated(puter){
-    try{return !!(puter.auth?.isSignedIn && puter.auth.isSignedIn())}catch(_){return false}
-  }
-
-  async function ensureWebsiteAuth(puter){
-    if(isAuthenticated(puter)) return;
-    const e=new Error("AUTH_REQUIRED");e.code="AUTH_REQUIRED";throw e;
-  }
-
-  async function authenticateAfterUserGesture(puter){
-    if(isAuthenticated(puter)) return;
-    if(typeof puter.ui?.authenticateWithPuter==="function"){
-      await puter.ui.authenticateWithPuter();
-      if(isAuthenticated(puter)) return;
-    }
-    if(typeof puter.auth?.signIn==="function"){
-      await puter.auth.signIn({attempt_temp_user_creation:true});
-      if(isAuthenticated(puter)) return;
-    }
-    const e=new Error("AUTH_REQUIRED");e.code="AUTH_REQUIRED";throw e;
-  }
+  // Puter.js manages authentication for txt2img. Do not force a login or redirect
+  // from the character screen: this keeps the generation flow usable across devices.
 
   async function withTimeout(promise,ms){
     let timer;
@@ -182,39 +163,36 @@ No generic fantasy hero. No random armor. No random wings. No random horns. No r
 
   function normalizeImage(result){
     if(!result) throw new Error("IMAGE_RESULT_EMPTY");
-    if(result.tagName==="IMG"&&result.src) return result;
-    if(typeof HTMLImageElement!=="undefined"&&result instanceof HTMLImageElement) return result;
-    if(typeof result==="string"){const i=new Image();i.src=result;return i}
-    if(result.src){const i=new Image();i.src=result.src;return i}
-    if(result.url){const i=new Image();i.src=result.url;return i}
+    // Puter txt2img resolves to an HTMLImageElement according to its API contract.
+    if(typeof HTMLImageElement!=="undefined" && result instanceof HTMLImageElement) return result;
+    if(result?.tagName==="IMG" && typeof result.src==="string") return result;
+    if(typeof result==="string"){const img=new Image();img.src=result;return img}
+    if(typeof result?.src==="string"){const img=new Image();img.src=result.src;return img}
+    if(typeof result?.url==="string"){const img=new Image();img.src=result.url;return img}
     throw new Error("IMAGE_RESULT_INVALID");
-  }
-
-  async function waitForImage(img){
-    if(img.complete&&img.naturalWidth>0) return img;
-    await new Promise((resolve,reject)=>{const t=setTimeout(()=>reject(new Error("IMAGE_LOAD_TIMEOUT")),30000);img.onload=()=>{clearTimeout(t);resolve()};img.onerror=()=>{clearTimeout(t);reject(new Error("IMAGE_LOAD_FAILED"))}});
-    return img;
   }
 
   async function generateOnce(prompt){
     const puter=await waitForPuter();
-    const result=await withTimeout(puter.ai.txt2img(prompt,{provider:PROVIDER,model:MODEL,quality:"high",ratio:{w:2,h:3}}),TIMEOUT_MS);
-    return waitForImage(normalizeImage(result));
+    const result=await withTimeout(
+      puter.ai.txt2img(prompt,{model:"openai/gpt-image-2",quality:"high",ratio:{w:2,h:3}}),
+      TIMEOUT_MS
+    );
+    return normalizeImage(result);
   }
 
   async function generate(p,rarity,story){
     if(activeGeneration) return activeGeneration;
-    activeGeneration=(async()=>{const puter=await waitForPuter();await ensureWebsiteAuth(puter);return generateOnce(buildPrompt(p,rarity,story))})();
-    try{return await activeGeneration}finally{activeGeneration=null}
+    activeGeneration=(async()=>generateOnce(buildPrompt(p,rarity,story)))();
+    try{return await activeGeneration}
+    finally{activeGeneration=null}
   }
 
+  // Kept for compatibility with older app integrations. No forced auth here.
   async function generateAfterUserGesture(p,rarity,story){
-    if(activeGeneration) return activeGeneration;
-    const puter=await waitForPuter();
-    await authenticateAfterUserGesture(puter);
     return generate(p,rarity,story);
   }
 
   installCardVisualSystem();
-  window.VisualEngine={MODEL,PROVIDER,buildPrompt,generate,generateAfterUserGesture};
+  window.VisualEngine={MODEL,PROVIDER,buildPrompt,generate,generateAfterUserGesture,version:"14.0.0"};
 })();
