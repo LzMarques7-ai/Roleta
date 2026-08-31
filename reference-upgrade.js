@@ -982,29 +982,51 @@ const namesA=first.split("\n").map(x=>x.split("|")[0]);
 const namesB=last.split("\n").map(x=>x.split("|")[0]);
 const lib=a=>a.map(x=>[x.name,x.value,x.ref]);
 
-/* Substitui somente as fontes de dados. A arquitetura da V11 continua intacta. */
-const originalDraw=window.RV.draw.bind(window.RV);
-window.RV.draw=key=>DATA[key]?pick(DATA[key]):originalDraw(key);
-window.RV.race=()=>{const x=pick(DATA.races);x.rank=Math.max(1,Math.min(11,Math.round(x.value/9)));return x};
-window.RV.power=()=>pick(DATA.power);
-window.RV.name=()=>`${namesA[randomIndex(namesA.length)]} ${namesB[randomIndex(namesB.length)]}`;
-window.RV.yesPower=()=>window.RV.randomInt(100)<70;
-
-if(window.LIBRARY){
-  for(const k of ["titles","age","races","weapons","force","speed","intelligence","combat","appearance","condition","talent","life"]){
-    const key=k==="age"?"ages":k;
-    LIBRARY[key]=lib(DATA[k]);
+/* V12.1 — instalação defensiva.
+   IMPORTANTE:
+   engine.js declara `RV` e library.js declara `LIBRARY` como bindings globais
+   (const), não como propriedades de window. A V12 original usava window.RV,
+   portanto quebrava antes mesmo de instalar o motor de referências.
+*/
+function installReferenceEngine(){
+  // Se o script tiver sido colocado antes do engine/app, espera o próximo tick.
+  if(typeof RV==="undefined" || !RV || typeof RV.draw!=="function"){
+    setTimeout(installReferenceEngine,0);
+    return;
   }
+
+  const originalDraw=RV.draw.bind(RV);
+
+  RV.draw=key=>DATA[key] ? pick(DATA[key]) : originalDraw(key);
+  RV.race=()=>{
+    const x=pick(DATA.races);
+    x.rank=Math.max(1,Math.min(11,Math.round(x.value/9)));
+    return x;
+  };
+  RV.power=()=>pick(DATA.power);
+  RV.name=()=>`${namesA[randomIndex(namesA.length)]} ${namesB[randomIndex(namesB.length)]}`;
+  RV.yesPower=()=>RV.randomInt(100)<70;
+
+  // LIBRARY também é um binding global, não necessariamente window.LIBRARY.
+  if(typeof LIBRARY!=="undefined" && LIBRARY){
+    for(const k of ["titles","age","races","weapons","force","speed","intelligence","combat","appearance","condition","talent","life"]){
+      const key=k==="age"?"ages":k;
+      if(DATA[k]) LIBRARY[key]=lib(DATA[k]);
+    }
+  }
+
+  globalThis.RV12={
+    version:"12.1.0",
+    randomModel:"independent-with-replacement",
+    equalWeight:true,
+    antiRepeat:false,
+    hiddenWeights:false,
+    combinationsPreserved:true,
+    sizes:Object.fromEntries(Object.entries(DATA).map(([k,v])=>[k,v.length]))
+  };
+
+  console.info("[Roleta da Vida] V12.1 ativa:",globalThis.RV12);
 }
 
-window.RV12={
-  version:"12.0.0",
-  randomModel:"independent-with-replacement",
-  equalWeight:true,
-  antiRepeat:false,
-  hiddenWeights:false,
-  combinationsPreserved:true,
-  sizes:Object.fromEntries(Object.entries(DATA).map(([k,v])=>[k,v.length]))
-};
-console.info("[Roleta da Vida] V12 ativa:",window.RV12);
+installReferenceEngine();
 })();
