@@ -5,8 +5,9 @@
   "use strict";
 
   const MODEL = "black-forest-labs/flux-schnell";
-  const MAX_ATTEMPTS = 2;
-  const TIMEOUT_MS = 120000;
+  const MAX_ATTEMPTS = 1;
+  const TIMEOUT_MS = 45000;
+  let activeGeneration = null;
 
   const rarityDirection = {
     1:"one-star common collectible: deliberately restrained, simple composition, subdued lighting, minimal spectacle",
@@ -221,31 +222,55 @@ No text, letters, logos, UI, card frame or watermark.`;
     return window.puter;
   }
 
-  async function ensureWebsiteAuth(puter){
+  function isAuthenticated(puter){
     try{
-      if(puter.auth?.isSignedIn && puter.auth.isSignedIn()) return;
-    }catch(_){}
+      return !!(puter.auth?.isSignedIn && puter.auth.isSignedIn());
+    }catch(_){ return false; }
+  }
 
-    if(typeof puter.auth?.signIn==="function"){
+  async function ensureWebsiteAuth(puter){
+    /* IMPORTANT: never open Puter authentication automatically from reveal().
+       On mobile Safari/Chrome an auth popup can replace the current page or
+       open the full Puter desktop UI. Authentication must happen from the
+       explicit user gesture (the ACTIVATE AND GENERATE button). */
+    if(isAuthenticated(puter)) return;
+    const e=new Error("AUTH_REQUIRED");
+    e.code="AUTH_REQUIRED";
+    throw e;
+  }
+
+  async function authenticateAfterUserGesture(puter){
+    if(isAuthenticated(puter)) return;
+
+    /* Prefer Puter's in-page authentication UI on mobile. */
+    if(typeof puter.ui?.authenticateWithPuter==="function"){
       try{
-        /* Puter supports temporary users; this keeps onboarding lightweight
-           for friends who do not already have a Puter account. */
-        await puter.auth.signIn({attempt_temp_user_creation:true});
-        return;
+        await puter.ui.authenticateWithPuter();
+        if(isAuthenticated(puter)) return;
       }catch(err){
-        const code=err?.error||err?.code||err?.message||"AUTH_REQUIRED";
-        const e=new Error(String(code));
-        e.code=code;
+        const e=new Error(err?.message||"AUTH_REQUIRED");
+        e.code=err?.error||err?.code||"AUTH_REQUIRED";
         throw e;
       }
     }
 
-    if(typeof puter.ui?.authenticateWithPuter==="function"){
-      await puter.ui.authenticateWithPuter();
-      return;
+    /* Fallback for browsers where the UI helper is unavailable. This call is
+       made only because the user clicked the activation button, satisfying
+       the browser popup requirement documented by Puter. */
+    if(typeof puter.auth?.signIn==="function"){
+      try{
+        await puter.auth.signIn({attempt_temp_user_creation:true});
+        if(isAuthenticated(puter)) return;
+      }catch(err){
+        const e=new Error(err?.message||"AUTH_REQUIRED");
+        e.code=err?.error||err?.code||"AUTH_REQUIRED";
+        throw e;
+      }
     }
 
-    throw new Error("AUTH_REQUIRED");
+    const e=new Error("AUTH_REQUIRED");
+    e.code="AUTH_REQUIRED";
+    throw e;
   }
 
   async function withTimeout(promise,ms){
@@ -295,20 +320,26 @@ No text, letters, logos, UI, card frame or watermark.`;
   }
 
   async function generate(p,rarity,story){
-    const puter=await waitForPuter();
-    await ensureWebsiteAuth(puter);
-    const prompt=buildPrompt(p,rarity,story);
-    let lastError=null;
-    for(let attempt=1;attempt<=MAX_ATTEMPTS;attempt++){
-      try{return await generateOnce(prompt)}
-      catch(err){lastError=err;if(attempt<MAX_ATTEMPTS)await wait(900)}
-    }
-    throw lastError||new Error("IMAGE_GENERATION_FAILED");
+    if(activeGeneration) return activeGeneration;
+    activeGeneration=(async()=>{
+      const puter=await waitForPuter();
+      await ensureWebsiteAuth(puter);
+      const prompt=buildPrompt(p,rarity,story);
+      let lastError=null;
+      for(let attempt=1;attempt<=MAX_ATTEMPTS;attempt++){
+        try{return await generateOnce(prompt)}
+        catch(err){lastError=err;if(attempt<MAX_ATTEMPTS)await wait(900)}
+      }
+      throw lastError||new Error("IMAGE_GENERATION_FAILED");
+    })();
+    try{return await activeGeneration}
+    finally{activeGeneration=null}
   }
 
   async function generateAfterUserGesture(p,rarity,story){
+    if(activeGeneration) return activeGeneration;
     const puter=await waitForPuter();
-    await ensureWebsiteAuth(puter);
+    await authenticateAfterUserGesture(puter);
     return generate(p,rarity,story);
   }
 
