@@ -103,3 +103,8 @@ header{width:100%;display:flex;justify-content:space-between;color:#303030;font-
 @keyframes aiOrb{0%,100%{transform:scale(.82);opacity:.55}50%{transform:scale(1.08);opacity:1}}
 @keyframes aiArtReveal{from{opacity:0;transform:scale(1.04);filter:blur(8px) brightness(1.6)}to{opacity:1;transform:none;filter:none}}
 @media(prefers-reduced-motion:reduce){.ai-orb,.ai-character-art{animation:none}}
+
+/* V11.1 — resilient AI generation state */
+.ai-art-status .next:disabled{opacity:.45;pointer-events:none}
+.ai-error{border-color:#555!important;box-shadow:0 0 18px rgba(255,255,255,.08)!important}
+.ai-character-art{background:#020202}

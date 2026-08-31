@@ -553,11 +553,14 @@ async function reveal(){
     console.warn("Geração de arte não concluída:",err);
     const status=document.getElementById("aiArtStatus");
     if(status){
-      status.innerHTML=`<span class="ai-orb ai-error"></span><b>ARTE INDISPONÍVEL</b><small>O personagem continua salvo. Você pode tentar novamente.</small><button id="retryArt" class="next" type="button">TENTAR ARTE</button>`;
+      const authRequired=err?.message==="AUTH_REQUIRED";
+      status.innerHTML=authRequired
+        ? `<span class="ai-orb"></span><b>ATIVAR ARTE</b><small>A geração é feita automaticamente depois que você autorizar o uso da IA.</small><button id="retryArt" class="next" type="button">ATIVAR E GERAR</button>`
+        : `<span class="ai-orb ai-error"></span><b>ARTE INDISPONÍVEL</b><small>A geração falhou temporariamente. O personagem continua salvo.</small><button id="retryArt" class="next" type="button">TENTAR NOVAMENTE</button>`;
     }
   }
 }
-document.addEventListener("click",e=>{
+document.addEventListener("click",async e=>{
   const b=e.target.closest("button");if(!b)return;
   if(b.id==="spin"){e.preventDefault();spin();return}
   if(b.id==="nextButton"){
@@ -580,8 +583,33 @@ document.addEventListener("click",e=>{
   }
   if(b.id==="retryArt"){
     e.preventDefault();
-    // Rebuild the final screen from the existing picks without changing any roll.
-    reveal();
+    const p={...state.picks};
+    p.hasPower=safe(p.hasPower);
+    const rarity=calculateRarity(p);
+    const story=buildOrigin(p);
+    const status=document.getElementById("aiArtStatus");
+    if(status){
+      status.innerHTML=`<span class="ai-orb"></span><b>CRIANDO A ARTE</b><small>A aparência está sendo materializada…</small>`;
+    }
+    b.disabled=true;
+    try{
+      const image=await window.VisualEngine.generateAfterUserGesture(p,rarity,story);
+      const art=document.getElementById("cardArt");
+      const current=document.getElementById("aiArtStatus");
+      if(art&&image){
+        art.querySelector(".portrait-svg")?.remove();
+        image.className="ai-character-art";
+        image.alt=`Arte de ${p.name?.name||"Personagem"}`;
+        image.loading="eager";
+        art.insertBefore(image,art.firstChild);
+        current?.remove();
+        document.getElementById("collectorCard")?.classList.add("art-ready");
+      }
+    }catch(err){
+      console.warn("Nova tentativa de arte falhou:",err);
+      const current=document.getElementById("aiArtStatus");
+      if(current) current.innerHTML=`<span class="ai-orb ai-error"></span><b>ARTE INDISPONÍVEL</b><small>${err?.message==="AUTH_REQUIRED"?"A autorização da IA não foi concluída.":"O serviço não respondeu. Tente novamente."}</small><button id="retryArt" class="next" type="button">TENTAR NOVAMENTE</button>`;
+    }
     return;
   }
   if(b.id==="newCharacter"){
