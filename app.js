@@ -1,4 +1,4 @@
-/* ROULETA DA VIDA — V9
+/* ROULETA DA VIDA — V11 • AI ART
    V8 wheel preserved.
    V9 changes: 16 character-focused rolls, true 9-star post-roll rarity,
    no power-domain roll when powers = No, reference provenance, detailed origin,
@@ -384,7 +384,7 @@ function render(){
 
   app.innerHTML=`
   <main class="screen">
-    <header><span>ROULETA DA VIDA</span><span>V9</span></header>
+    <header><span>ROULETA DA VIDA</span><span>V11</span></header>
     <div class="title">Roleta da Vida</div>
     <div class="counter">${state.index+1} / ${list.length}</div>
     <section class="wheelbox">
@@ -468,10 +468,10 @@ function cardShell(p, rarity, story){
   const stat=(label,x)=>`<div class="stat"><span>${esc(label)}</span><b>${esc(x?.name||"—")}</b></div>`;
   return `
   <main class="screen final visual-final" style="--rarity:${esc(rarity.color)}">
-    <header><span>ROULETA DA VIDA</span><span>V10</span></header>
+    <header><span>ROULETA DA VIDA</span><span>V11</span></header>
     <section class="collector-card" id="collectorCard" data-stars="${rarity.stars}">
       <div class="holo"></div>
-      <div class="card-art">${portraitSVG(p,rarity)}</div>
+      <div class="card-art" id="cardArt">${portraitSVG(p,rarity)}<div class="ai-art-status" id="aiArtStatus"><span class="ai-orb"></span><b>CRIANDO A ARTE</b><small>A história terminou. A aparência está sendo materializada…</small></div></div>
       <div class="card-content">
         <div class="card-top"><div class="stars">${rarityStars(rarity.stars)}</div><div class="rarity-name">${esc(rarity.name)}</div></div>
         <div class="name">${esc(p.name.name)}</div>
@@ -500,10 +500,10 @@ function cardShell(p, rarity, story){
   </main>`;
 }
 
-function reveal(){
+async function reveal(){
   if(state.spinning)return;
   const p={...state.picks};
-  p.hasPower=p.hasPower?.name==="Sim";
+  p.hasPower=safe(p.hasPower);
   const defaults={
     name:["Pessoa sem nome",0],race:["Humano",10],title:["Ninguém",5],age:["18 anos",50],
     appearance:["aparência comum",50],condition:["condição comum",50],
@@ -512,7 +512,7 @@ function reveal(){
     weapons:["Nenhuma",10],life:["Comum",30]
   };
   for(const [k,[n,v]] of Object.entries(defaults)) if(!p[k])p[k]={name:n,value:v};
-  if(!p.hasPower){delete p.power;delete p.control}
+  if(p.hasPower.name!=="Sim"){delete p.power;delete p.control}
   else {if(!p.power)p.power={name:"Poder desconhecido",value:50};if(!p.control)p.control={name:"controle básico",value:30}}
   const rarity=calculateRarity(p);
   document.body.className=`rarity-${rarity.stars}`;
@@ -532,8 +532,31 @@ function reveal(){
     card.addEventListener("pointermove",e=>move(e.clientX,e.clientY),{passive:true});
     card.addEventListener("pointerleave",()=>{card.style.setProperty("--rx","0deg");card.style.setProperty("--ry","0deg");card.style.setProperty("--mx","50%");card.style.setProperty("--my","50%")},{passive:true});
   });
-}
 
+  // A história é o gatilho: assim que ela existe, a arte começa automaticamente.
+  try{
+    if(!window.VisualEngine?.generate) throw new Error("Motor visual indisponível");
+    const image=await window.VisualEngine.generate(p,rarity,story);
+    const art=document.getElementById("cardArt");
+    const status=document.getElementById("aiArtStatus");
+    if(art && image){
+      art.querySelector(".portrait-svg")?.remove();
+      image.className="ai-character-art";
+      image.alt=`Arte de ${p.name.name}`;
+      image.loading="eager";
+      art.insertBefore(image,art.firstChild);
+      if(status)status.remove();
+      const card=document.getElementById("collectorCard");
+      card?.classList.add("art-ready");
+    }
+  }catch(err){
+    console.warn("Geração de arte não concluída:",err);
+    const status=document.getElementById("aiArtStatus");
+    if(status){
+      status.innerHTML=`<span class="ai-orb ai-error"></span><b>ARTE INDISPONÍVEL</b><small>O personagem continua salvo. Você pode tentar novamente.</small><button id="retryArt" class="next" type="button">TENTAR ARTE</button>`;
+    }
+  }
+}
 document.addEventListener("click",e=>{
   const b=e.target.closest("button");if(!b)return;
   if(b.id==="spin"){e.preventDefault();spin();return}
@@ -553,6 +576,12 @@ document.addEventListener("click",e=>{
     e.preventDefault();
     const c=document.getElementById("collectorCard");
     if(c){c.classList.add("card-pulse");setTimeout(()=>c.classList.remove("card-pulse"),900);}
+    return;
+  }
+  if(b.id==="retryArt"){
+    e.preventDefault();
+    // Rebuild the final screen from the existing picks without changing any roll.
+    reveal();
     return;
   }
   if(b.id==="newCharacter"){
