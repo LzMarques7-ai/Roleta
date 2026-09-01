@@ -1,14 +1,23 @@
 {
   "project": "Roleta da Vida",
-  "version": "20.0.0",
-  "architecture": "local-first procedural character forge",
+  "version": "21.0.0",
+  "architecture": "resilient local-first procedural character forge",
   "external_image_ai": false,
   "external_api": false,
   "randomness": "independent cryptographic draws with replacement",
   "rarity": "post-roll combination classifier",
   "reference_provenance": true,
-  "visual_generation": "local SVG form-database composition",
+  "visual_generation": "local SVG character director + form atlas",
   "visual_database": "visual-database.js",
-  "guaranteed_visual_path": "inline SVG DOM, no remote image decoding",
-  "script_order": ["library.js","engine.js","story.js","sources.js","visual-database.js","visual-engine.js","app.js"]
+  "guaranteed_visual_path": "inline SVG DOM with fallback reconstruction",
+  "script_order": [
+    "library.js",
+    "engine.js",
+    "story.js",
+    "sources.js",
+    "visual-database.js",
+    "visual-engine.js",
+    "reference-upgrade.js",
+    "app.js"
+  ]
 }
