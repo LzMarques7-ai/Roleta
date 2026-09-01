@@ -3,10 +3,71 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#000">
-<title>Roleta da Vida V18 — Visual Engine</title>
+<meta name="theme-color" content="#030303">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Roleta da Vida</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  #boot{min-height:100svh;background:#030303;color:#fff;display:grid;place-items:center;
+    padding:24px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;text-align:center}
+  #boot>div{max-width:520px}
+  #boot strong{display:block;font-size:18px;letter-spacing:.12em}
+  #boot small{display:block;color:#666;margin-top:10px;line-height:1.5}
+  #boot.error strong{color:#ff6b6b}
+  #boot.error small{color:#999;word-break:break-word}
+</style>
+<script>
+(function(){
+  window.__ROULETA_BOOT_OK__ = false;
+  window.addEventListener('error', function(e){
+    if(window.__ROULETA_BOOT_OK__) return;
+    var b=document.getElementById('boot');
+    if(!b)return;
+    b.className='error';
+    b.innerHTML='<div><strong>ERRO AO CARREGAR A ROLETA</strong><small>'
+      +String(e.message||'erro desconhecido').replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})
+      +'</small></div>';
+  });
+  window.addEventListener('unhandledrejection', function(e){
+    if(window.__ROULETA_BOOT_OK__) return;
+    var b=document.getElementById('boot');
+    if(!b)return;
+    b.className='error';
+    b.innerHTML='<div><strong>ERRO AO CARREGAR A ROLETA</strong><small>'
+      +String(e.reason?.message||e.reason||'erro desconhecido')
+      +'</small></div>';
+  });
+})();
+</script>
 </head>
 <body>
-<script src="visual-engine.js?v=18.0.0"></script>
+<div id="boot"><div><strong>CARREGANDO A FORJA</strong><small>Preparando banco de referências, motor e atlas visual…</small></div></div>
+<div id="app"></div>
+
+<script src="library.js"></script>
+<script src="engine.js"></script>
+<script src="character-intelligence.js"></script>
+<script src="story.js"></script>
+<script src="sources.js"></script>
+<script src="visual-database.js"></script>
+<script src="visual-engine.js"></script>
+<script src="reference-upgrade.js"></script>
+<script src="app.js"></script>
+
+<script>
+(function(){
+  var b=document.getElementById('boot');
+  var app=document.getElementById('app');
+  if(app && app.innerHTML.trim()){
+    window.__ROULETA_BOOT_OK__=true;
+    if(b)b.remove();
+  }else{
+    if(b){
+      b.className='error';
+      b.innerHTML='<div><strong>A FORJA NÃO INICIOU</strong><small>O motor não conseguiu montar a tela. Recarregue a página; se continuar, envie esta mensagem para eu corrigir o arquivo.</small></div>';
+    }
+  }
+})();
+</script>
 </body>
 </html>
