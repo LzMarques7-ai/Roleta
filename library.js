@@ -1,4 +1,4 @@
-/* ROULETA DA VIDA V19 — LOCAL REFERENCE LIBRARY
+/* ROULETA DA VIDA V22 — LOCAL REFERENCE LIBRARY
    Banco de referências + metadados. Nenhuma API externa é necessária.
    Cada resultado tem: name, ref, refType, refWhy, value, tags e visual.
 */
