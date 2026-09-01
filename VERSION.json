@@ -1,0 +1,12 @@
+{
+  "project": "Roleta da Vida",
+  "version": "19.0.0",
+  "architecture": "local-first procedural character forge",
+  "external_image_ai": false,
+  "external_api": false,
+  "randomness": "independent draws with replacement",
+  "rarity": "post-roll combination classifier",
+  "reference_provenance": true,
+  "visual_generation": "layered SVG composition",
+  "script_order": ["library.js","engine.js","story.js","sources.js","visual-engine.js","app.js"]
+}
